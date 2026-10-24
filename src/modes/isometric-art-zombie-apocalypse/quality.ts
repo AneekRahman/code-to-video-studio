@@ -11,7 +11,7 @@ type CompiledStory = {fps: number; durationInFrames: number; shots: CompiledShot
 const hookSeconds = 1.5;
 const readingWordsPerSecond = 3;
 const readingLeadSeconds = 0.5;
-const durationRange = [30, 60] as const;
+export const durationRange = [30, 60] as const;
 
 export function storyRubric(story: CompiledStory): QualityCheck[] {
   const seconds = (frames: number) => frames / story.fps;

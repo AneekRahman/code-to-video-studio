@@ -1,19 +1,58 @@
-# Video Studio implementation
+# Code-to-Video studio
 
-Read [the shared maintenance contract](../README.md), README.md and DEFERRED.md
-before changing execution behavior. Keep the guide and implementation updated
-together under that contract. This package
-implements the local fixture rendering tool, not a configured production bot.
+This folder is the Code-to-Video bot's studio: its working folder in
+OpenMausBot and the only folder it writes. It is a self-contained project
+(its own lockfile and settings); everything the bot needs is inside it.
+Read README.md and DEFERRED.md before changing execution behaviour.
 
-Keep source, dependencies, contracts, catalog and skills here. Put jobs/media,
-credentials, caches and render outputs outside this source tree. Preserve strict
-contracts, pinned file hashes, narrated timing and technical-only completion.
-Provider calls belong only in the explicit `generate-*` commands, read keys
-from the environment or the git-ignored `local.env`, and never run while
-rendering, mixing or validating a job. Never add production storage,
-automatic acceptance, or publishing without explicit configured contracts. Existing repository comment
-and isolated-verification rules apply.
+## Start of a session
 
-Run package typecheck/tests and scoped root lint after meaningful changes. Use
-scripts/smoke.ts for media-path changes; keep fixtures separate from live user
-workspaces. Do not treat tone fixture labels as actual speech alignment evidence.
+1. `pnpm install --frozen-lockfile` if `node_modules` is missing or the
+   lockfile changed; `pnpm studio prepare-browser` once per install.
+2. `pnpm studio doctor`. Fix, or report to Showrunner or the person, every
+   failed required check before production. ffmpeg comes from the host
+   image; the bot cannot install it.
+3. Run every command as `pnpm studio <command>` from this folder. It passes
+   `--use-env-proxy`; inside the bot box, network access exists only
+   through the box's proxy, which Node otherwise ignores.
+
+## Every video request
+
+Start with [mode selection](skills/mode-selection.md), then the chosen
+mode's skill from `catalog/modes.json`.
+
+## Where things go
+
+- Job data (plates, audio, packaged jobs, output stores, previews) goes in
+  `work/`: git-ignored and persistent. Never `/tmp`, which the bot box
+  discards after each turn, and nowhere else in the source tree; the runner
+  refuses other paths.
+- Provider keys come only from `local.env` (git-ignored, mode 600). The bot
+  box strips them from the environment. Never print, log or copy a key, or
+  put one in a job, brief, report or commit.
+- Plans for new modes go in `plans/` here, as
+  [create-mode](skills/create-mode.md) describes.
+- Never write outside this folder. The team's design guide and the
+  repository's plans belong to their maintainers.
+
+## Changing the studio
+
+Keep source, dependencies, contracts, catalogs and skills here. Preserve
+strict contracts, pinned file hashes, narrated timing and technical-only
+completion. Provider calls belong only in the explicit `generate-*`
+commands and never run while rendering, mixing or validating a job. Never
+add production storage, automatic acceptance or publishing without explicit
+configured contracts.
+
+A mode is one directory under `src/modes/` exporting its `defineMode`
+definition, listed in `src/modes/registry.ts`, with its skill, templates,
+tests and a regenerated `catalog/modes.json` (`pnpm catalog:modes`). New
+modes follow [create-mode](skills/create-mode.md): interview, plan, then a
+staged build reviewed after each stage.
+
+Write a code comment only for what the code cannot say: an external tool's
+behaviour with its version, a public contract, or a security invariant.
+
+After meaningful changes run `pnpm typecheck`, `pnpm test` and `pnpm lint`;
+run `pnpm smoke` when rendering or audio behaviour changes. Do not treat
+tone fixture labels as speech alignment evidence.

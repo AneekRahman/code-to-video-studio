@@ -2,7 +2,7 @@ import {cp, lstat, mkdir, mkdtemp, readFile, realpath, rename, rm, stat} from 'n
 import {basename, extname, join, resolve} from 'node:path';
 import {z} from 'zod';
 import {canonicalizeProspective, isWithin, readJson, sha256, writeJson} from './files.ts';
-import {loadAnyJob, runtimeFor} from './jobs.ts';
+import {loadAnyJob, openJob} from './jobs.ts';
 import {StudioError, requireCondition} from './errors.ts';
 import {inspect} from './media.ts';
 import {packageRoot} from './render.ts';
@@ -63,6 +63,12 @@ export async function verifyArtifacts(dir: string) {
   return manifest;
 }
 
+/** The package's git-ignored `work/` folder is the only place inside the source tree where job data may live. */
+export function overlapsSource(canonicalPackage: string, path: string): boolean {
+  if (isWithin(path, canonicalPackage)) return true;
+  return isWithin(canonicalPackage, path) && !isWithin(resolve(canonicalPackage, 'work'), path);
+}
+
 export async function executeJob(jobPath: string, out: string, operation: Operation, visualManifest?: string) {
   const started = Date.now();
   const loaded = await loadAnyJob(jobPath, started);
@@ -70,22 +76,20 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
   const canonicalPackage = await realpath(packageRoot);
   const prospectiveRoot = await canonicalizeProspective(out);
   requireCondition(
-    !isWithin(canonicalPackage, prospectiveRoot) &&
-    !isWithin(prospectiveRoot, canonicalPackage) &&
+    !overlapsSource(canonicalPackage, prospectiveRoot) &&
     !isWithin(loaded.root, prospectiveRoot) &&
     !isWithin(prospectiveRoot, loaded.root),
     'OUTPUT_SCOPE',
-    'Output store must be outside source and input directories, without overlap'
+    'Output store must be outside source (or inside work/) and input directories, without overlap'
   );
   await mkdir(resolve(out), {recursive: true, mode: 0o700});
   const root = await realpath(resolve(out));
   requireCondition(
-    !isWithin(canonicalPackage, root) &&
-    !isWithin(root, canonicalPackage) &&
+    !overlapsSource(canonicalPackage, root) &&
     !isWithin(loaded.root, root) &&
     !isWithin(root, loaded.root),
     'OUTPUT_SCOPE',
-    'Output store must be outside source and input directories, without overlap'
+    'Output store must be outside source (or inside work/) and input directories, without overlap'
   );
   const store = resolve(root, loaded.job.job_id);
   const prospectiveStore = await canonicalizeProspective(store);
@@ -173,8 +177,7 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
     }
     await writeJson(resolve(snapshot, 'job.json'), snapshotJob);
     snapshotFiles.push('inputs/job.json');
-    const execution = await loadAnyJob(resolve(snapshot, 'job.json'), started);
-    const runtime = runtimeFor(execution);
+    const {runtime} = await openJob(resolve(snapshot, 'job.json'), started);
     const artifacts: string[] = [...snapshotFiles];
     let finalVideo: string;
     const expected = {...loaded.job.format, duration_seconds: loaded.job.format.duration_seconds};

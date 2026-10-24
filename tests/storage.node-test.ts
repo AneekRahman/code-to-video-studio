@@ -3,7 +3,7 @@ import {test} from 'node:test';
 import {dirname, join, resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {mkdir, mkdtemp, realpath, rm, stat, symlink, writeFile} from 'node:fs/promises';
-import {executeJob, verifyArtifacts} from '../src/runner.ts';
+import {executeJob, overlapsSource, verifyArtifacts} from '../src/runner.ts';
 import {readJson, resolveInput, sha256} from '../src/files.ts';
 import {sourceProvenance} from '../src/provenance.ts';
 import {loadJob} from '../src/load.ts';
@@ -49,6 +49,17 @@ test('output scope symmetrically rejects parent and child overlaps with source a
     await rm(sandbox, {recursive: true, force: true});
     await rm(fixture.directory, {recursive: true, force: true});
   }
+});
+
+test('the work folder is the only place inside the package an output store may live', () => {
+  const pkg = '/studio';
+  assert.equal(overlapsSource(pkg, '/studio/work'), false);
+  assert.equal(overlapsSource(pkg, '/studio/work/outputs/job'), false);
+  assert.equal(overlapsSource(pkg, '/studio/workshop'), true);
+  assert.equal(overlapsSource(pkg, '/studio/src/out'), true);
+  assert.equal(overlapsSource(pkg, '/studio'), true);
+  assert.equal(overlapsSource(pkg, '/'), true);
+  assert.equal(overlapsSource(pkg, '/elsewhere/outputs'), false);
 });
 
 test('symlinks in inputs, JSON documents, and artifacts are strictly rejected', async () => {

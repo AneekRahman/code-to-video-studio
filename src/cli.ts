@@ -16,6 +16,10 @@ import {generateAudio} from './audio.ts';
 import {packageStory} from './modes/isometric-art-zombie-apocalypse/package.ts';
 import {createElevenLabsProvider} from './audiogen/elevenlabs.ts';
 import {createMockAudioProvider} from './audiogen/mock.ts';
+import {modeCatalog} from './modes/registry.ts';
+import {doctor} from './doctor.ts';
+import {ensureBrowser} from '@remotion/renderer';
+import {checkModeRequest} from './modes/request.ts';
 
 function sanitizeIssues(issues: z.ZodIssue[]): {path: string; code: string}[] {
   return issues.map(issue => ({
@@ -40,24 +44,24 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}}});
   const command = positionals[0];
   if (command === 'generate-plates') {
-    requireCondition(values.plates && values.out, 'USAGE', 'generate-plates requires --plates <plates.json> --out <external directory> [--provider nim|mock] [--only id,id]');
+    requireCondition(values.plates && values.out, 'USAGE', 'generate-plates requires --plates <plates.json> --out <directory under work/> [--provider nim|mock] [--only id,id]');
     requireCondition(!values.provider || values.provider === 'nim' || values.provider === 'mock', 'USAGE', 'Supported image providers: nim, mock');
     const provider = values.provider === 'mock' ? createMockImageProvider() : createNimFluxProvider(await resolveSecret('NVIDIA_NIM'));
     return generatePlates({plates: values.plates, out: values.out, provider, only: values.only?.split(',').filter(Boolean)});
   }
   if (command === 'preview-shots') {
-    requireCondition(values.shots && values.plates && values.out, 'USAGE', 'preview-shots requires --shots <shots.json> --plates <plates directory> --out <empty external directory>');
+    requireCondition(values.shots && values.plates && values.out, 'USAGE', 'preview-shots requires --shots <shots.json> --plates <plates directory> --out <empty directory under work/>');
     return previewShots({shots: values.shots, plates: values.plates, out: values.out});
   }
   if (command === 'preview-story') {
-    requireCondition(values.story && values.plates && values.out, 'USAGE', 'preview-story requires --story <story.json> --plates <plates directory> --out <empty external directory> [--timing <segment-timing.json>] [--stills-only]');
+    requireCondition(values.story && values.plates && values.out, 'USAGE', 'preview-story requires --story <story.json> --plates <plates directory> --out <empty directory under work/> [--timing <segment-timing.json>] [--stills-only]');
     return previewStory({story: values.story, plates: values.plates, timing: values.timing, out: values.out, stillsOnly: values['stills-only']});
   }
   if (command === 'generate-audio') {
-    requireCondition(values.story && values.sound && values.out, 'USAGE', 'generate-audio requires --story <story.json> --sound <sound.json> --out <external directory> [--provider elevenlabs|mock]');
+    requireCondition(values.story && values.sound && values.out, 'USAGE', 'generate-audio requires --story <story.json> --sound <sound.json> --out <directory under work/> [--provider elevenlabs|mock]');
     requireCondition(!values.provider || values.provider === 'elevenlabs' || values.provider === 'mock', 'USAGE', 'Supported audio providers: elevenlabs, mock');
     const provider = values.provider === 'mock' ? createMockAudioProvider() : createElevenLabsProvider(await resolveSecret('ELEVENLABS'));
     return generateAudio({story: values.story, sound: values.sound, out: values.out, provider});
@@ -68,17 +72,24 @@ async function main() {
   }
   if (command === 'schemas') return {schema_version: '1.0', schemas: schemas()};
   if (command === 'catalog') return JSON.parse(await readFile(new URL('../catalog/components.json', import.meta.url), 'utf8'));
+  if (command === 'doctor') return doctor();
+  if (command === 'prepare-browser') return {status: 'browser_ready', browser: (await ensureBrowser()).type};
+  if (command === 'modes') return modeCatalog();
+  if (command === 'check-mode-request') {
+    requireCondition(values.request, 'USAGE', 'check-mode-request requires --request <mode-request.json>');
+    return checkModeRequest(values.request);
+  }
   if (command === 'verify') {
     requireCondition(values.result, 'USAGE', 'verify requires --result <output directory>');
     return {status: 'verified', result: await verifyArtifacts(values.result)};
   }
-  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <external store>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; schemas; verify --result <directory>');
+  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; schemas; verify --result <directory>');
   if (command === 'validate' || command === 'compile') {
     const loaded = await loadAnyJob(values.job);
-    return {status: 'validated', job_id: loaded.job.job_id, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};
+    return {status: 'validated', job_id: loaded.job.job_id, mode: loaded.mode, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};
   }
   requireCondition(command === 'preview' || command === 'render' || command === 'finish' || command === 'run', 'USAGE', 'Unknown studio command');
-  requireCondition(values.out, 'USAGE', 'Rendering commands require --out <external output store>');
+  requireCondition(values.out, 'USAGE', 'Rendering commands require --out <output store under work/>');
   return executeJob(values.job, values.out, command, values['visual-manifest']);
 }
 

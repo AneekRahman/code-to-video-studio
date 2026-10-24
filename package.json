@@ -3,15 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=24"
+    "node": ">=24.5"
   },
   "scripts": {
-    "studio": "node --experimental-strip-types src/cli.ts",
+    "studio": "node --experimental-strip-types --use-env-proxy src/cli.ts",
     "typecheck": "tsc --noEmit",
+    "lint": "oxlint src scripts tests",
     "test": "node --experimental-strip-types --test \"tests/*.node-test.ts\"",
-    "smoke": "node --experimental-strip-types scripts/smoke.ts",
-    "fixture": "node --experimental-strip-types scripts/create-fixture.ts"
+    "smoke": "node --experimental-strip-types --use-env-proxy scripts/smoke.ts",
+    "fixture": "node --experimental-strip-types scripts/create-fixture.ts",
+    "catalog:modes": "node --experimental-strip-types scripts/write-mode-catalog.ts"
   },
   "dependencies": {
     "@fontsource/bebas-neue": "5.3.0",
@@ -32,6 +35,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "@types/three": "0.186.0",
+    "oxlint": "1.80.0",
     "typescript": "5.8.3"
   }
 }

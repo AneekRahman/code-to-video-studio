@@ -1,0 +1,7 @@
+# pnpm 11 reads allowBuilds, pnpm 10 reads onlyBuiltDependencies; keep both.
+packages:
+  - "."
+allowBuilds:
+  esbuild: true # postinstall validates the platform binary (used by @remotion/bundler)
+onlyBuiltDependencies:
+  - esbuild

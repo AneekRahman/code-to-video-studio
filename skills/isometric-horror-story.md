@@ -62,6 +62,5 @@ sheet shows the flash a frame late. Bad — stretching a shot's `extra_seconds`
 to hide a late narration line instead of regenerating that segment.
 
 Evidence: [sound tests](../tests/sound.node-test.ts),
-[story job tests](../tests/story-job.node-test.ts),
-[story tests](../tests/story.node-test.ts) and the
-[plan](../../../../plans/2026-10-24-video-studio-cannot-tell-isometric-horror-stories/plan.md).
+[story job tests](../tests/story-job.node-test.ts) and
+[story tests](../tests/story.node-test.ts).

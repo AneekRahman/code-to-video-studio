@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0",
+  "fallback": "explainer",
+  "modes": [
+    {
+      "id": "explainer",
+      "title": "Narrated explainer",
+      "role": "fallback",
+      "summary": "A narrated 9:16 short built from code-animated text, charts, mockups and still images, timed to finalized narration and word timestamps.",
+      "use_when": [
+        "educational lists, tips, myths versus facts and how-tos",
+        "comparisons, statistics, charts, timelines and processes",
+        "quotes, kinetic typography and UI or product mockups",
+        "any request that no specialised mode fits"
+      ],
+      "not_for": [
+        "stories that a specialised mode covers",
+        "AI-generated video, moving footage, screen recordings or talking heads (excluded in v1)"
+      ],
+      "aspect": "9:16",
+      "duration_seconds": null,
+      "inputs": [
+        "script",
+        "storyboard",
+        "finalized narration audio",
+        "word-level timestamps",
+        "brand",
+        "permitted stills and fonts",
+        "optional mix tracks"
+      ],
+      "skill": "skills/remotion-scene-authoring.md",
+      "templates": [
+        "scripts/create-fixture.ts"
+      ],
+      "commands": [
+        "validate",
+        "compile",
+        "preview",
+        "render",
+        "finish",
+        "run",
+        "verify"
+      ]
+    },
+    {
+      "id": "isometric-art-zombie-apocalypse",
+      "title": "Isometric zombie-apocalypse rules short",
+      "role": "specialised",
+      "summary": "A narrated isometric horror story: a character escapes zombies and locks himself in, an emergency broadcast lists the rules for surviving the night, and an uncanny twist loops back to the opening shot.",
+      "use_when": [
+        "a zombie or apocalypse survival story told in isometric miniature",
+        "horror \"rules for surviving\" shorts with an emergency-broadcast reveal",
+        "a new episode of this series: a different location, rules or twist"
+      ],
+      "not_for": [
+        "gore or graphic violence (the mode is uncanny, never gory)",
+        "horror outside the zombie-survival premise, such as hauntings or slashers",
+        "factual or educational content that merely mentions zombies"
+      ],
+      "aspect": "9:16",
+      "duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "inputs": [
+        "story (voiced segments, shots, overlays)",
+        "plate set",
+        "sound design (cast, effects, music, cues)",
+        "NVIDIA_NIM and ELEVENLABS keys for generation"
+      ],
+      "skill": "skills/isometric-horror-story.md",
+      "templates": [
+        "src/modes/isometric-art-zombie-apocalypse/story.template.json",
+        "src/modes/isometric-art-zombie-apocalypse/plates.template.json",
+        "src/modes/isometric-art-zombie-apocalypse/sound.template.json"
+      ],
+      "commands": [
+        "generate-plates",
+        "preview-shots",
+        "preview-story",
+        "generate-audio",
+        "package-story",
+        "run",
+        "verify"
+      ]
+    }
+  ],
+  "new_mode_offer": {
+    "ask_when": "A person asked for this video in the conversation, and no specialised mode fits it, so it would fall back to the explainer. Ask once, before production starts.",
+    "ask_with": "The OpenMausBot question card: the ask_user tool, or the engine's own AskUserQuestion tool.",
+    "question": "No specialised video mode fits this request, so I would make it with the general explainer mode. If you will make more videos like this one, I can first build a dedicated mode for them: a short interview, a plan, then a sample for you to review after each build stage. How would you like to go?",
+    "choices": [
+      {
+        "label": "Just this video",
+        "action": "Make it with the explainer mode."
+      },
+      {
+        "label": "New mode, then this video",
+        "action": "Interview, plan and build the new mode (skills/create-mode.md); make this video in it once it ships."
+      },
+      {
+        "label": "New mode, and this video now",
+        "action": "Make this video with the explainer now, and build the new mode alongside it."
+      }
+    ],
+    "unattended": "A job Showrunner dispatched without a person in the conversation never waits on this question: make it with the explainer and add a new-mode suggestion to the production report."
+  }
+}

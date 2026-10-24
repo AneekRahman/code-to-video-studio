@@ -9,7 +9,7 @@ import {generateAudio} from '../src/audio.ts';
 import {createMockImageProvider} from '../src/imagegen/mock.ts';
 import {createMockAudioProvider} from '../src/audiogen/mock.ts';
 import {packageStory} from '../src/modes/isometric-art-zombie-apocalypse/package.ts';
-import {loadAnyJob, runtimeFor} from '../src/jobs.ts';
+import {loadAnyJob, openJob} from '../src/jobs.ts';
 import {sha256} from '../src/files.ts';
 import {createFixture} from '../scripts/create-fixture.ts';
 
@@ -27,7 +27,7 @@ test('a packaged story job loads through the mode registry and rejects tampered 
 
     const loaded = await loadAnyJob(packaged.job);
     assert.equal(loaded.mode, 'isometric-art-zombie-apocalypse');
-    assert.equal(typeof runtimeFor(loaded).finish, 'function');
+    assert.equal(typeof (await openJob(packaged.job)).runtime.finish, 'function');
     assert.equal(loaded.timeline.durationInFrames, Math.round(packaged.duration_seconds * 30));
     assert.ok(loaded.timeline.cues.length > 0);
 

@@ -20,8 +20,7 @@ export async function sourceProvenance(root = packageRoot) {
     }
   }
   await walk('src');
-  for (const name of ['package.json', 'tsconfig.json']) hashes[name] = sha256(await readFile(resolve(canonicalRoot, name)));
-  hashes['pnpm-lock.yaml'] = sha256(await readFile(resolve(canonicalRoot, '../../../pnpm-lock.yaml')));
+  for (const name of ['package.json', 'tsconfig.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml']) hashes[name] = sha256(await readFile(resolve(canonicalRoot, name)));
   let gitCommit: string | null = null;
   try {gitCommit = (await runTool('git', ['-C', canonicalRoot, 'rev-parse', 'HEAD'])).trim();} catch {gitCommit = null;}
   const sortedFiles = Object.fromEntries(Object.entries(hashes).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
