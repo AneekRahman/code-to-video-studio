@@ -257,8 +257,8 @@ production bucket or user OpenMausBot data is used.
 Source integration follows the official Remotion [bundle](https://www.remotion.dev/docs/bundle),
 [composition selection](https://www.remotion.dev/docs/renderer/select-composition),
 and [media rendering](https://www.remotion.dev/docs/renderer/render-media) APIs.
-The team's design guide, kept by its maintainers outside this folder,
-remains the authority for team roles, storage, spending and creative
+The team's design guide, a private maintainer document, remains the
+authority for team roles, storage, spending and creative
 acceptance.
 
 ## License and security

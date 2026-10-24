@@ -25,6 +25,6 @@ they do not settle production deployment or creative policy.
 | Mode selection | The mode registry, mode catalog, `UNKNOWN_MODE` dispatch, new-mode offer wording and `check-mode-request` are implemented. Choosing a mode from a request is the bot's judgment against each card's `use_when` and `not_for`, not code. Still open: a production-report schema with the new-mode suggestion for unattended jobs, a persistent record of offers and answers, and a configured bot profile that follows the mode-selection skill. |
 | Excluded/deferred modes | AI video remains excluded. Moving footage, silent production, new isolation architecture, parallel videos and remote/Lambda rendering need separate decisions. |
 
-The team's design guide (decision register and roadmap) is kept by
-maintainers in the OpenMausBot repository. No live
-fleet or user app state has been configured by this studio.
+The team's design guide (decision register and roadmap) is a private
+maintainer document; this repository's documents are complete without it.
+No live fleet or user app state has been configured by this studio.
