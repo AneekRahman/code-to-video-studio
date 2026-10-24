@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "mode": "isometric-art-zombie-apocalypse",
+  "story_id": "rules-for-the-first-night",
+  "cast": {
+    "narrator": {"voice_id": "Myap7vX7L9ipoJVdyOVZ", "label": "Julian (ElevenLabs voice library)", "model": "eleven_v4", "seed": 4101, "process": "close-mic", "gain_db": 0},
+    "broadcast": {"voice_id": "39VEjjybOLlt9SowNQxJ", "label": "OMB Emergency Broadcast (ElevenLabs voice design)", "model": "eleven_v3", "seed": 4202, "process": "broadcast", "gain_db": 0},
+    "double": {"voice_id": "Myap7vX7L9ipoJVdyOVZ", "label": "Julian, through the door", "model": "eleven_v4", "seed": 4303, "process": "through-door", "gain_db": 0}
+  },
+  "effects": [
+    {"effect_id": "knock", "prompt": "A single heavy knuckle knock on a solid wooden front door, heard from inside the house, dry and close", "duration_seconds": 0.6, "prompt_influence": 0.7},
+    {"effect_id": "wind", "prompt": "Cold empty night wind outside a suburban house, low and hollow, very distant dog bark, no music", "duration_seconds": 12, "prompt_influence": 0.5, "loop": true},
+    {"effect_id": "glitch", "prompt": "Short harsh analog video glitch, burst of digital static and a tape stop", "duration_seconds": 0.8, "prompt_influence": 0.6},
+    {"effect_id": "store", "prompt": "Quiet grocery store ambience, fluorescent light hum, distant checkout scanner beeps, no music", "duration_seconds": 8, "prompt_influence": 0.5, "loop": true},
+    {"effect_id": "scream", "prompt": "A distant terrified scream outdoors far away, echoing between buildings", "duration_seconds": 2.5, "prompt_influence": 0.6},
+    {"effect_id": "groan", "prompt": "Low guttural zombie groan with a raspy wet breath, close", "duration_seconds": 2, "prompt_influence": 0.6},
+    {"effect_id": "run", "prompt": "Fast panicked running footsteps on asphalt at night with heavy frightened breathing", "duration_seconds": 6, "prompt_influence": 0.6, "loop": true},
+    {"effect_id": "porch-steps", "prompt": "Running footsteps up creaky wooden porch stairs, then a front door yanked open", "duration_seconds": 2.2, "prompt_influence": 0.6},
+    {"effect_id": "door-slam", "prompt": "Heavy wooden front door slammed shut hard from inside a house, deep impact", "duration_seconds": 1.5, "prompt_influence": 0.7},
+    {"effect_id": "chain", "prompt": "A door chain lock slid into place, short metal rattle", "duration_seconds": 1, "prompt_influence": 0.7},
+    {"effect_id": "deadbolt", "prompt": "Two deadbolt locks turned quickly one after another, heavy mechanical clacks", "duration_seconds": 1.2, "prompt_influence": 0.7},
+    {"effect_id": "heartbeat", "prompt": "Slow heavy human heartbeat, deep low thumps, close, no music", "duration_seconds": 6, "prompt_influence": 0.6, "loop": true},
+    {"effect_id": "room-tone", "prompt": "Silent dark living room at night, faint refrigerator hum, very quiet room tone", "duration_seconds": 10, "prompt_influence": 0.5, "loop": true},
+    {"effect_id": "alert-tone", "prompt": "Emergency alert system broadcast tone, harsh electronic attention beeps from an old television", "duration_seconds": 1.8, "prompt_influence": 0.7},
+    {"effect_id": "tv-static", "prompt": "Old television soft white noise static and electrical hum, steady", "duration_seconds": 8, "prompt_influence": 0.5, "loop": true},
+    {"effect_id": "light-click", "prompt": "A light switch flicked off with a sharp click and the electrical hum cutting out", "duration_seconds": 0.8, "prompt_influence": 0.7},
+    {"effect_id": "rule-hit", "prompt": "Deep cinematic sub bass impact hit with a dark reverb tail, horror trailer boom", "duration_seconds": 2.5, "prompt_influence": 0.6},
+    {"effect_id": "glass-tap", "prompt": "Fingernails slowly tapping and scraping on window glass from outside, quiet and creepy", "duration_seconds": 3.5, "prompt_influence": 0.6},
+    {"effect_id": "door-rattle", "prompt": "Front door handle rattled violently, the door shaking hard against its locks", "duration_seconds": 2, "prompt_influence": 0.6},
+    {"effect_id": "riser", "prompt": "Slow dark tension riser, reversed reverb swell building, horror", "duration_seconds": 3, "prompt_influence": 0.6}
+  ],
+  "music": {
+    "prompt": "Dark ambient horror drone score for a short film. Slow evolving low synth pads, cold metallic textures, distant detuned piano notes, sparse deep sub pulses like a slow heartbeat. No drums, no vocals, no melody. Tense, minimal, cinematic.",
+    "duration_seconds": 60,
+    "gain_db": -9,
+    "fade_in_seconds": 1.5,
+    "fade_out_seconds": 0.3,
+    "silences": [
+      {"from": {"shot_id": "slam", "at": 0}, "until": {"shot_id": "tv", "at": 0}},
+      {"from": {"shot_id": "twist", "at": 0}}
+    ]
+  },
+  "knock": {"effect_id": "knock", "gain_db": -2},
+  "silences": [
+    {"from": {"shot_id": "twist", "at": 0.93}}
+  ],
+  "cues": [
+    {"effect_id": "wind", "at": {"shot_id": "hook"}, "until": {"shot_id": "shop"}, "gain_db": -16, "fade_in_seconds": 0.5},
+    {"effect_id": "glitch", "at": {"shot_id": "shop"}, "gain_db": -6},
+    {"effect_id": "store", "at": {"shot_id": "shop"}, "until": {"shot_id": "street"}, "gain_db": -18, "fade_out_seconds": 0.2},
+    {"effect_id": "scream", "at": {"segment_id": "n2", "word": "screaming"}, "gain_db": -8},
+    {"effect_id": "groan", "at": {"shot_id": "shop", "at": 0.62}, "gain_db": -6},
+    {"effect_id": "wind", "at": {"shot_id": "street"}, "until": {"shot_id": "slam"}, "gain_db": -18},
+    {"effect_id": "run", "at": {"shot_id": "street"}, "until": {"shot_id": "porch-run", "at": 0.45}, "gain_db": -9, "fade_out_seconds": 0.15},
+    {"effect_id": "groan", "at": {"shot_id": "street", "at": 0.3}, "gain_db": -9},
+    {"effect_id": "scream", "at": {"shot_id": "chase", "at": 0.15}, "gain_db": -16},
+    {"effect_id": "groan", "at": {"shot_id": "chase", "at": 0.45}, "gain_db": -4},
+    {"effect_id": "porch-steps", "at": {"shot_id": "porch-run", "at": 0.4}, "gain_db": -5},
+    {"effect_id": "door-slam", "at": {"shot_id": "slam", "offset_seconds": -0.03}, "gain_db": 0},
+    {"effect_id": "chain", "at": {"segment_id": "n5", "word": "Chain", "offset_seconds": 0.05}, "gain_db": -6},
+    {"effect_id": "deadbolt", "at": {"segment_id": "n5", "word": "deadbolts", "offset_seconds": 0.1}, "gain_db": -5},
+    {"effect_id": "heartbeat", "at": {"shot_id": "slam", "at": 0.25}, "until": {"shot_id": "tv"}, "gain_db": -10, "fade_in_seconds": 0.4, "fade_out_seconds": 0.6},
+    {"effect_id": "room-tone", "at": {"shot_id": "slam"}, "until": {"shot_id": "twist"}, "gain_db": -6},
+    {"effect_id": "glitch", "at": {"shot_id": "tv"}, "gain_db": -8},
+    {"effect_id": "alert-tone", "at": {"shot_id": "tv", "offset_seconds": 0.1}, "gain_db": -10},
+    {"effect_id": "tv-static", "at": {"shot_id": "tv"}, "until": {"shot_id": "rule4", "at": 1}, "gain_db": -26, "fade_out_seconds": 0.3},
+    {"effect_id": "rule-hit", "at": {"segment_id": "r1"}, "gain_db": -10},
+    {"effect_id": "light-click", "at": {"segment_id": "r1", "word": "light", "edge": "end"}, "gain_db": -4},
+    {"effect_id": "rule-hit", "at": {"segment_id": "r2"}, "gain_db": -9},
+    {"effect_id": "glass-tap", "at": {"shot_id": "rule2", "at": 0.45}, "gain_db": -8},
+    {"effect_id": "rule-hit", "at": {"segment_id": "r3"}, "gain_db": -8},
+    {"effect_id": "door-rattle", "at": {"shot_id": "rule3", "at": 0.55}, "gain_db": -4},
+    {"effect_id": "rule-hit", "at": {"segment_id": "r4"}, "gain_db": -7},
+    {"effect_id": "heartbeat", "at": {"shot_id": "rule4", "at": 0.3}, "until": {"shot_id": "twist"}, "gain_db": -12, "fade_in_seconds": 1},
+    {"effect_id": "riser", "at": {"shot_id": "twist", "offset_seconds": -3}, "gain_db": -8},
+    {"effect_id": "wind", "at": {"shot_id": "twist"}, "until": {"shot_id": "twist", "at": 0.93}, "gain_db": -16, "fade_out_seconds": 0.02}
+  ]
+}
