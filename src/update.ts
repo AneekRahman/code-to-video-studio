@@ -4,6 +4,7 @@ import {resolve} from 'node:path';
 import {promisify} from 'node:util';
 import {StudioError, requireCondition} from './errors.ts';
 import {packageRoot} from './render.ts';
+import {migrateAllModes} from './migrations/runner.ts';
 
 const execute = promisify(execFile);
 
@@ -55,10 +56,17 @@ async function heldLocks(work: string, depth = 4): Promise<string[]> {
  * check on a separate `update/<tag>` branch. On any failure the workspace branch is left exactly as it was. A kept
  * `update/<tag>` branch, repaired and committed, is reused by the next run with the same tag.
  */
-export async function updateStudio(options: {to: string; remote?: string; root?: string; checks?: readonly UpdateCheck[]}) {
+export async function updateStudio(options: {
+  to: string;
+  remote?: string;
+  root?: string;
+  checks?: readonly UpdateCheck[];
+  autoMigrate?: boolean;
+}) {
   const root = options.root ?? packageRoot;
   const remote = options.remote ?? 'upstream';
   const checks = options.checks ?? releaseChecks;
+  const autoMigrate = options.autoMigrate ?? true;
   requireCondition(/^v\d+\.\d+\.\d+$/.test(options.to), 'USAGE', 'update --to takes a release tag such as v1.2.0');
   requireCondition(await git(root, 'status', '--porcelain') === '', 'UPDATE_DIRTY', 'Commit or discard workspace changes before updating');
   const locks = await heldLocks(resolve(root, 'work'));
@@ -88,6 +96,29 @@ export async function updateStudio(options: {to: string; remote?: string; root?:
     throw new StudioError('UPDATE_CONFLICT', `Merging ${ref === release ? options.to : branch} conflicts with workspace changes; the workspace branch is unchanged`, {conflicts, kept_branch: resumed ? updateBranch : null});
   }
 
+  const appliedMigrations = [];
+  if (autoMigrate) {
+    const migrationReports = await migrateAllModes({studioRoot: root, skipUnversioned: true});
+    const failedMigrations = migrationReports.filter(r => r.status === 'failed' || r.status === 'no_path');
+    if (failedMigrations.length > 0) {
+      await git(root, 'switch', '--quiet', branch);
+      const restore = await run(root, 'pnpm', ['install', '--frozen-lockfile'], minutes(15));
+      throw new StudioError('UPDATE_CHECK_FAILED', `${options.to} has local modes that cannot be migrated automatically; the workspace branch is unchanged and ${updateBranch} is kept for repair`, {
+        check: 'migration', passed: [], kept_branch: updateBranch, dependencies_restored: restore.ok, reports: failedMigrations,
+      });
+    }
+    const migrated = migrationReports.filter(r => r.status === 'migrated');
+    if (migrated.length > 0) {
+      appliedMigrations.push(...migrated);
+      await git(root, 'add', 'local-modes');
+      const commitRes = await run(root, 'git', [...identity, 'commit', '-m', `chore(modes): auto-migrate local modes for release ${options.to}`]);
+      if (!commitRes.ok) {
+        await git(root, 'switch', '--quiet', branch);
+        throw new StudioError('UPDATE_GIT_FAILED', 'Failed to commit mode migrations on update branch', {output: commitRes.tail});
+      }
+    }
+  }
+
   const passed: string[] = [];
   for (const check of checks) {
     const result = await run(root, check.command, check.args, check.timeout_ms);
@@ -103,5 +134,13 @@ export async function updateStudio(options: {to: string; remote?: string; root?:
   await git(root, 'switch', '--quiet', branch);
   await git(root, 'merge', '--quiet', '--ff-only', updateBranch);
   await git(root, 'branch', '--quiet', '-d', updateBranch);
-  return {status: 'updated' as const, branch, release: options.to, from_commit: before, commit: await git(root, 'rev-parse', 'HEAD'), checks: passed};
+  return {
+    status: 'updated' as const,
+    branch,
+    release: options.to,
+    from_commit: before,
+    commit: await git(root, 'rev-parse', 'HEAD'),
+    checks: passed,
+    migrations: appliedMigrations,
+  };
 }

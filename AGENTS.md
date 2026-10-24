@@ -64,18 +64,19 @@ reviewed after each stage. A local mode imports studio code only from
 Update only when the person or a maintainer asks, never during a job:
 
 1. `pnpm studio update --to <release tag>` (for example `v1.2.0`). It
-   merges the release on `update/<tag>`, runs install, typecheck, lint,
-   tests, `test:modes` and `doctor`, and only then moves the workspace
-   branch. On any failure the workspace branch is unchanged.
+   merges the release on `update/<tag>`, automatically applies mode migration
+   recipes (`studio migrate`) if the release raised the mode API major, runs
+   install, typecheck, lint, tests, `test:modes` and `doctor`, and only then
+   moves the workspace branch. On any failure the workspace branch is unchanged.
 2. `UPDATE_CHECK_FAILED`: read the failing check's output and `CHANGELOG.md`
-   for that release. When the release raised the mode API major, migrate
-   each local mode on the kept `update/<tag>` branch
-   (`git switch update/<tag>`, `pnpm install --frozen-lockfile`, fix,
-   commit),    switch back to the workspace branch and rerun the same update.
-   Report anything the changelog does not explain to the person. If a newer
-   release appears meanwhile, keep the repairs by renaming the branch
-   (`git branch -m update/<old tag> update/<new tag>`) and update to the
-   newer tag.
+   for that release. If automatic migration could not find a path, inspect
+   `CHANGELOG.md` and run `pnpm studio migrate [--dry-run]` or repair each
+   local mode on the kept `update/<tag>` branch (`git switch update/<tag>`,
+   `pnpm install --frozen-lockfile`, fix, commit), switch back to the workspace
+   branch and rerun the same update. Report anything the changelog does not
+   explain to the person. If a newer release appears meanwhile, keep the
+   repairs by renaming the branch (`git branch -m update/<old tag> update/<new tag>`)
+   and update to the newer tag.
 3. `UPDATE_CONFLICT` means a maintainer file was edited here; report it.
    `MODE_ID_COLLISION` means a release now ships a mode with a local mode's
    id: ask the person for a new id, rename the folder and card, commit and

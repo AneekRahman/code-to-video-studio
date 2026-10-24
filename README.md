@@ -85,21 +85,28 @@ The bot commits its local modes and plans on that branch and never pushes;
 they exist only in the workspace, so its backups must include this folder.
 The repository is public, so fetching a release needs no credentials.
 
-## Updating
+## Updating and Migrations
 
 ```sh
 pnpm studio update --to v<release>
 ```
 
 `update` refuses uncommitted changes and a held job lock, fetches the tag
-from `upstream`, and merges it on `update/<tag>`. There it runs install,
-typecheck, lint, tests, `test:modes` (so every local mode renders against the
-new release) and `doctor`. Only when all pass does the workspace branch move
-to the merge. On a conflict or a failed check the workspace branch is
-unchanged and the error names the cause; a failed check keeps `update/<tag>`
-so local modes can be migrated there (see [CHANGELOG.md](CHANGELOG.md)), and
-rerunning the same update resumes it. Earlier outputs keep their recorded
-source fingerprint and still verify.
+from `upstream`, and merges it on `update/<tag>`. When the release raises the
+mode API major version, it automatically resolves and applies registered
+migration recipes to local modes. It then runs install, typecheck, lint,
+tests, `test:modes` (so every local mode renders against the new release)
+and `doctor`. Only when all pass does the workspace branch move to the merge.
+On a conflict or a failed check the workspace branch is unchanged and the error
+names the cause; a failed check keeps `update/<tag>` so local modes can be
+inspected or repaired there, and rerunning the same update resumes it.
+
+To inspect or run mode migrations standalone (e.g. previewing codemod changes):
+
+```sh
+pnpm studio migrate --dry-run
+pnpm studio migrate [--mode <id>] [--to <version>]
+```
 
 ## Running inside OpenMausBot
 

@@ -17,6 +17,8 @@ import {packageStory} from './modes/isometric-art-zombie-apocalypse/package.ts';
 import {createElevenLabsProvider} from './audiogen/elevenlabs.ts';
 import {createMockAudioProvider} from './audiogen/mock.ts';
 import {modeCatalog, requireNoCollisions} from './modes/registry.ts';
+import {modeApiVersion} from './modes/mode.ts';
+import {migrateAllModes, migrateMode} from './migrations/runner.ts';
 import {updateStudio} from './update.ts';
 import {doctor} from './doctor.ts';
 import {ensureBrowser} from '@remotion/renderer';
@@ -45,12 +47,31 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}}});
   const command = positionals[0];
   if (command === 'doctor') return doctor();
   if (command === 'update') {
-    requireCondition(values.to, 'USAGE', 'update requires --to <release tag> [--remote <name, default upstream>]');
-    return updateStudio({to: values.to, remote: values.remote});
+    requireCondition(values.to, 'USAGE', 'update requires --to <release tag> [--remote <name, default upstream>] [--no-migrate]');
+    return updateStudio({to: values.to, remote: values.remote, autoMigrate: !values['no-migrate']});
+  }
+  if (command === 'migrate') {
+    const targetApi = values.to ? Number(values.to) : undefined;
+    if (values.to) {
+      requireCondition(!Number.isNaN(targetApi) && targetApi! > 0, 'USAGE', 'migrate --to takes a positive integer target API version');
+    }
+    const reports = values.mode
+      ? [await migrateMode(values.mode, {toApi: targetApi, dryRun: values['dry-run']})]
+      : await migrateAllModes({toApi: targetApi, dryRun: values['dry-run']});
+    const allSucceeded = reports.every(r => r.status === 'migrated' || r.status === 'up_to_date');
+    if (!allSucceeded) {
+      throw new StudioError('MIGRATION_FAILED', 'One or more local modes failed migration', {dry_run: Boolean(values['dry-run']), target_api: targetApi ?? modeApiVersion.major, reports});
+    }
+    return {
+      status: 'migrated',
+      dry_run: Boolean(values['dry-run']),
+      target_api: targetApi ?? modeApiVersion.major,
+      reports,
+    };
   }
   requireNoCollisions();
   if (command === 'generate-plates') {
@@ -89,7 +110,7 @@ async function main() {
     requireCondition(values.result, 'USAGE', 'verify requires --result <output directory>');
     return {status: 'verified', result: await verifyArtifacts(values.result)};
   }
-  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; update --to <tag>; schemas; verify --result <directory>');
+  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; schemas; verify --result <directory>');
   if (command === 'validate' || command === 'compile') {
     const loaded = await loadAnyJob(values.job);
     return {status: 'validated', job_id: loaded.job.job_id, mode: loaded.mode, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};

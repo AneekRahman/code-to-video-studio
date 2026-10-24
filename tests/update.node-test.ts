@@ -63,6 +63,30 @@ test('an update merges a release into the workspace branch and keeps local modes
   }
 });
 
+test('an update automatically migrates local modes when a release bumps the mode API major', async () => {
+  const r = await rehearsal();
+  try {
+    await write(r.workspace, 'local-modes/recipes/mode.ts', "import {defineMode} from '../../src/mode-api.ts';\nexport default defineMode({\n  api: 1,\n  card: {id: 'recipes'},\n});\n");
+    await git(r.workspace, 'commit', '--quiet', '-am', 'update recipes to declare api: 1');
+
+    await write(r.upstream, 'src/modes/mode.ts', 'export const modeApiVersion = {major: 2, minor: 0} as const;\n');
+    await git(r.upstream, 'add', 'src/modes/mode.ts');
+    await r.release('v2.0.0', 'src/core.ts', 'export const core = 3;\n');
+
+    const updated = await updateStudio({to: 'v2.0.0', root: r.workspace, checks: passes});
+    assert.equal(updated.status, 'updated');
+    assert.equal(updated.migrations?.length, 1);
+    assert.equal(updated.migrations?.[0]?.mode_id, 'recipes');
+    assert.equal(updated.migrations?.[0]?.from_api, 1);
+    assert.equal(updated.migrations?.[0]?.to_api, 2);
+
+    const migratedSource = await readFile(resolve(r.workspace, 'local-modes/recipes/mode.ts'), 'utf8');
+    assert.match(migratedSource, /\bapi:\s*2\b/);
+  } finally {
+    await rm(r.root, {recursive: true, force: true});
+  }
+});
+
 test('a release that fails a check leaves the workspace branch unchanged, and the kept update branch can be repaired and resumed', async () => {
   const r = await rehearsal();
   try {
