@@ -5,7 +5,8 @@ import {requireCondition} from '../../errors.ts';
 import type {PlateManifest} from '../../plates.ts';
 import {ShotListSchema, compileShots, type CompiledShot, type IsoProps} from './shots.ts';
 import {SegmentTimingSchema, StorySchema, compileStory, estimateTiming, type StoryProps} from './story.ts';
-import {renderComposition, stageFonts, stagePlates, writeContactSheet, type StagedPlate, type StillRequest} from './render.ts';
+import {renderComposition, writeContactSheet, type StillRequest} from '../../composition.ts';
+import {stageFonts, stagePlates, type StagedPlate} from './render.ts';
 
 export async function loadPlates(platesDir: string): Promise<{dir: string; manifest: PlateManifest; plates: Record<string, StagedPlate>}> {
   const dir = await realpath(resolve(platesDir));

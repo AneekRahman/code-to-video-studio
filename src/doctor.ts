@@ -5,6 +5,7 @@ import {isWithin} from './files.ts';
 import {resolveSecret} from './imagegen/credentials.ts';
 import {runToolCapture} from './process.ts';
 import {packageRoot} from './render.ts';
+import {registry, type Registry} from './modes/registry.ts';
 
 export type DoctorCheck = {check_id: string; pass: boolean; required: boolean; detail: string};
 
@@ -110,7 +111,15 @@ async function credentialChecks(root: string): Promise<DoctorCheck[]> {
   return checks;
 }
 
-export async function doctor(root = packageRoot) {
+export function modeChecks(current: Registry): DoctorCheck[] {
+  const local = current.modes.filter(mode => mode.source === 'local').map(mode => mode.card.id);
+  return [
+    {check_id: 'mode_ids', pass: current.collisions.length === 0, required: true, detail: current.collisions.length ? `local modes share an id with a shipped mode: ${current.collisions.join(', ')}; rename them` : 'no local mode shares an id with a shipped mode'},
+    {check_id: 'local_modes', pass: current.unavailable.length === 0, required: false, detail: current.unavailable.length ? current.unavailable.map(m => `${m.id}: ${m.reason}`).join('; ') : local.length ? `available: ${local.join(', ')}` : 'none'},
+  ];
+}
+
+export async function doctor(root = packageRoot, current: Registry = registry) {
   const canonical = await realpath(root);
   const checks: DoctorCheck[] = [
     {check_id: 'node', pass: nodeSupported(process.versions.node), required: true, detail: `Node ${process.versions.node}; needs ${minimumNode.join('.')} or later`},
@@ -120,6 +129,7 @@ export async function doctor(root = packageRoot) {
     await browserCheck(canonical),
     await workCheck(canonical),
     ...await credentialChecks(canonical),
+    ...modeChecks(current),
   ];
   await access(resolve(canonical, 'package.json'));
   const ready = checks.every(check => check.pass || !check.required);

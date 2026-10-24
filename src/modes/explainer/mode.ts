@@ -1,11 +1,13 @@
 import {loadJob, type LoadedJob} from '../../load.ts';
 import {renderVisual} from '../../render.ts';
 import {finishAudio} from '../../mix.ts';
-import {defineMode} from '../mode.ts';
+import {createFixture} from '../../../scripts/create-fixture.ts';
+import {defineMode, modeApiVersion} from '../mode.ts';
 
 export type LoadedExplainerJob = LoadedJob & {mode: 'explainer'};
 
 export const explainerMode = defineMode<LoadedExplainerJob>({
+  api: modeApiVersion.major,
   card: {
     id: 'explainer',
     title: 'Narrated explainer',
@@ -33,4 +35,5 @@ export const explainerMode = defineMode<LoadedExplainerJob>({
     renderVisual: (dir, kind, deadline) => renderVisual(loaded, dir, kind, deadline),
     finish: async (visual, dir, deadline) => ({video: await finishAudio(loaded, visual, dir, deadline), artifacts: []}),
   }),
+  fixture: async dir => (await createFixture(dir)).job,
 });

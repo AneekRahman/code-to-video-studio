@@ -12,7 +12,8 @@ import {SegmentTimingSchema, StorySchema, compileStory, type StoryProps} from '.
 import {SoundSchema, planMix} from './sound.ts';
 import {mixStory, muxStory} from './mixdown.ts';
 import {measureExport, storyRubric} from './quality.ts';
-import {renderComposition, stageFonts, stagePlates, type StagedPlate} from './render.ts';
+import {renderComposition} from '../../composition.ts';
+import {stageFonts, stagePlates, type StagedPlate} from './render.ts';
 
 const contractError = (code: string) => (error: unknown): never => {
   if (error instanceof StudioError) throw error;

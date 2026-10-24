@@ -1,13 +1,13 @@
 # Decisions and implementation still needed
 
-The user approved a package in this monorepo, JSON CLI, local rendering, a first
+The user approved a standalone studio repository, JSON CLI, local rendering, a first
 narrated explainer, fixture adapters, pinned contracts and isolated verification.
 The local adapter/schema and fixture brand are implemented starting points;
 they do not settle production deployment or creative policy.
 
 | Area | Still to determine or implement |
 |---|---|
-| Live placement | The studio is a self-contained project (own lockfile and pnpm settings), runs from a copy in the bot's own folder, sends provider calls through the bot box's proxy, keeps job data in `work/`, reads keys from `local.env`, and `doctor` checks the environment. Still open: creating the Code-to-Video bot and its working folder in a workspace, switching the bot box on, ffmpeg in the host image, verifying `doctor` and a render inside a real box, resource enforcement, and safe update/rollback of the studio copy. |
+| Live placement | The studio is a self-contained project (own lockfile and pnpm settings), runs from a copy in the bot's own folder, sends provider calls through the bot box's proxy, keeps job data in `work/`, reads keys from `local.env`, and `doctor` checks the environment. Each workspace clones a release onto its own branch and takes later releases with `studio update`, which merges on a separate branch and moves the workspace only after every check, including every local mode's fixture, passes. Still open: creating the Code-to-Video bot and its working folder in a workspace, switching the bot box on, ffmpeg in the host image, verifying `doctor`, a render and an update inside a real box, resource enforcement, backups of each workspace's local modes, and a route for contributing a local mode back as a shipped one. |
 | Bot/team integration | Engine/model profiles, scoped authenticated tools, Showrunner dispatch, persistent global job state/leases, Critic audiovisual service, two-round correction ledger and per-platform Publisher integration. The CLI cannot accept or publish work. |
 | Production storage | S3 bucket/prefix, credentials/roles, immutable versions, upload/download adapter, retention and artifact authorization. Local files are fixture/work copies, not a change to the selected S3 design. |
 | Database and orchestration | Product selection, global leases/cancellation/recovery, durable state/events/accounting, queue/backpressure. Filesystem locking only serializes this local output store. |
@@ -20,9 +20,10 @@ they do not settle production deployment or creative policy.
 | Advanced audio | The isometric mode implements per-voice processing, per-clip dialogue levelling, sidechain ducking, looping beds, word-anchored cues, music and master silences, and two-pass EBU R128 normalisation to −14 LUFS with true-peak headroom for AAC. The explainer keeps explicit gain, fade and delay tracks. Still open: the approved per-platform loudness policy, and Audio Director approval of mixes. |
 | Reuse/repair | Generated plates and audio are reused when the request is unchanged, and the isometric mode has reusable clay character rigs. Still open: a scene-level media cache, a targeted render CLI and transition-aware partial assembly. Repairs re-render the full composition. |
 | Operational hardening | Hard sandbox CPU/memory/network/disk enforcement, global cancellation, global stale-lock automatic recovery, monitoring/alerts and deployment CI. Local deadlines/attempts are checked; byte limits reject oversized inputs/results but are not filesystem quotas. Interrupted store locks require manual inspection. |
-| Mode selection | The mode registry, published mode catalog, `UNKNOWN_MODE` dispatch, new-mode offer wording and `check-mode-request` are implemented. Choosing a mode from a request is the bot's judgment against each card's `use_when` and `not_for`, not code. Still open: a production-report schema with the new-mode suggestion for unattended jobs, a persistent record of offers and answers, and a configured bot profile that follows the mode-selection skill. |
+| Local modes | Local modes in `local-modes/`, the versioned mode API, fixtures with `test:modes`, `MODE_ID_COLLISION`, the starter template and `studio update` are implemented. The mode API is deliberately small: job loading, rendering through a mode's own Remotion entry, providers, media checks and the shared components. Still open: shared audio finishing (mixing, loudness) in the API, CLI commands contributed by a local mode, migration scripts for major API changes, and the maintainers' review route for promoting a local mode to a shipped one. |
+| Mode selection | The mode registry, mode catalog, `UNKNOWN_MODE` dispatch, new-mode offer wording and `check-mode-request` are implemented. Choosing a mode from a request is the bot's judgment against each card's `use_when` and `not_for`, not code. Still open: a production-report schema with the new-mode suggestion for unattended jobs, a persistent record of offers and answers, and a configured bot profile that follows the mode-selection skill. |
 | Excluded/deferred modes | AI video remains excluded. Moving footage, silent production, new isolation architecture, parallel videos and remote/Lambda rendering need separate decisions. |
 
-The team's design guide (decision register and roadmap) and the
-repository's plans are kept by maintainers outside this studio. No live
+The team's design guide (decision register and roadmap) is kept by
+maintainers in the OpenMausBot repository. No live
 fleet or user app state has been configured by this studio.

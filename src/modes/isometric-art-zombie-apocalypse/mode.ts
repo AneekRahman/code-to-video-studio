@@ -1,11 +1,20 @@
-import {defineMode} from '../mode.ts';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {generatePlates} from '../../plates.ts';
+import {generateAudio} from '../../audio.ts';
+import {createMockImageProvider} from '../../imagegen/mock.ts';
+import {createMockAudioProvider} from '../../audiogen/mock.ts';
+import {defineMode, modeApiVersion} from '../mode.ts';
+import {packageStory} from './package.ts';
 import {finishStory, loadStoryJob, renderStoryVisual, type LoadedStoryJob} from './job.ts';
 import {durationRange} from './quality.ts';
 import {modeId} from './style.ts';
 
 const dir = `src/modes/${modeId}`;
+const template = (name: string) => fileURLToPath(new URL(name, import.meta.url));
 
 export const isometricZombieMode = defineMode<LoadedStoryJob>({
+  api: modeApiVersion.major,
   card: {
     id: modeId,
     title: 'Isometric zombie-apocalypse rules short',
@@ -33,4 +42,11 @@ export const isometricZombieMode = defineMode<LoadedStoryJob>({
     renderVisual: (dir, kind, deadline) => renderStoryVisual(loaded, dir, kind, deadline),
     finish: (visual, dir, deadline) => finishStory(loaded, visual, dir, deadline),
   }),
+  fixture: async out => {
+    const story = template('story.template.json');
+    const sound = template('sound.template.json');
+    await generatePlates({plates: template('plates.template.json'), out: resolve(out, 'plates'), provider: createMockImageProvider()});
+    await generateAudio({story, sound, out: resolve(out, 'audio'), provider: createMockAudioProvider()});
+    return (await packageStory({story, sound, plates: resolve(out, 'plates'), audio: resolve(out, 'audio'), out: resolve(out, 'job')})).job;
+  },
 });

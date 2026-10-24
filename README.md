@@ -1,9 +1,11 @@
-# Video Studio local rendering package
+# Code-to-Video studio
 
-The Code-to-Video bot's studio: its working folder in OpenMausBot and the
-only folder it writes. The project is self-contained, with its own lockfile
-and pnpm settings, so it runs from a copy in the bot's own folder.
-[AGENTS.md](AGENTS.md) is the bot's entry point.
+The Code-to-Video bot's studio for the OpenMausBot Video Studio team: a
+local, code-driven video renderer whose modes turn a brief into a narrated
+9:16 short. Each workspace runs its own clone, on its own branch, as the
+bot's working folder, builds its own modes in it, and takes maintainer
+releases with `pnpm studio update`. [AGENTS.md](AGENTS.md) is the bot's
+entry point.
 
 This implements the approved rendering-package-first step: a strict local job
 adapter, narration-driven timeline, eleven reusable components, six caption modes,
@@ -20,24 +22,38 @@ missing capabilities are recorded in [DEFERRED.md](DEFERRED.md).
 
 A job's `mode` selects how it is produced. The explainer is the fallback for
 every request no specialised mode fits; a job without `mode` is an explainer
-job, and an unregistered mode fails with `UNKNOWN_MODE`. Each mode lives in
-`src/modes/<id>/` and is listed in `src/modes/registry.ts`.
+job, and an unregistered mode fails with `UNKNOWN_MODE`.
 
-`studio modes` prints the mode catalog, also published as
-[`catalog/modes.json`](catalog/modes.json): each mode's purpose, `use_when`
+- **Shipped modes** live in `src/modes/<id>/` and come with releases.
+- **Local modes** are a workspace's own, in `local-modes/<id>/`, found at
+  startup ([local modes](local-modes/README.md)). They import studio code
+  only through the mode API, `src/mode-api.ts` and
+  `src/rendering/mode-api.tsx`, and declare the API major they were written
+  for. A local mode written for another major, or one that fails to load, is
+  listed as unavailable with the reason and never offered. A local mode with
+  a shipped mode's id stops the studio with `MODE_ID_COLLISION` until it is
+  renamed. `templates/local-mode/` is a working starter.
+
+`studio modes` prints the catalog (`pnpm catalog:modes` writes it to the
+git-ignored `catalog/modes.json`): each mode's source, purpose, `use_when`
 and `not_for` lines, duration range, inputs, skill, templates and commands,
-plus the new-mode offer. When a person's request falls back to the
-explainer, the bot asks that offer through OpenMausBot's question card before
-production; unattended Showrunner jobs put a suggestion in the report
-instead ([mode selection](skills/mode-selection.md)). A person who will make
-more videos of a kind can have a mode built for it:
-`studio check-mode-request --request <file>` validates the interview record
-and returns the plan and mode paths ([create a mode](skills/create-mode.md)).
-After changing a mode card, run `pnpm catalog:modes`; a test fails while the published catalog is stale.
+the unavailable local modes, and the new-mode offer. When a person's request
+falls back to the explainer, the bot asks that offer through OpenMausBot's
+question card before production; unattended Showrunner jobs put a
+suggestion in the report instead ([mode selection](skills/mode-selection.md)).
+A person who will make more videos of a kind can have a local mode built for
+it: `studio check-mode-request --request <file>` validates the interview
+record and returns the plan and mode paths
+([create a mode](skills/create-mode.md)).
 
-Requires Node 24.5 or later, pnpm 10.33, and ffmpeg/ffprobe on PATH. All
-Remotion dependencies are pinned to 4.0.538. Provider requests are never made
-by frame rendering. Check applicable Remotion licensing before production use.
+Every mode has a fixture built with mock providers. `pnpm test:modes [id…]`
+renders and verifies each one end to end under `work/conformance/`, and
+fails on any technical or `quality.json` failure; it keeps the run only when
+something failed.
+
+Requires Node 24.5 or later, pnpm 10.33, git, and ffmpeg/ffprobe on PATH.
+All Remotion dependencies are pinned to 4.0.538. Provider requests are never
+made by frame rendering.
 
 From this folder:
 
@@ -48,11 +64,42 @@ pnpm studio doctor
 pnpm typecheck
 pnpm test
 pnpm lint
+pnpm test:modes
 pnpm studio schemas
 pnpm studio catalog
 pnpm studio modes
 pnpm fixture --out work/fixture
 ```
+
+## Installing in a workspace
+
+One clone per workspace, made by the workspace admin from a release tag:
+
+```sh
+git clone --origin upstream --branch v<release> https://github.com/AneekRahman/code-to-video-studio.git video-studio
+cd video-studio
+git switch -c workspace/<workspace name>
+```
+
+The bot commits its local modes and plans on that branch and never pushes;
+they exist only in the workspace, so its backups must include this folder.
+The repository is public, so fetching a release needs no credentials.
+
+## Updating
+
+```sh
+pnpm studio update --to v<release>
+```
+
+`update` refuses uncommitted changes and a held job lock, fetches the tag
+from `upstream`, and merges it on `update/<tag>`. There it runs install,
+typecheck, lint, tests, `test:modes` (so every local mode renders against the
+new release) and `doctor`. Only when all pass does the workspace branch move
+to the merge. On a conflict or a failed check the workspace branch is
+unchanged and the error names the cause; a failed check keeps `update/<tag>`
+so local modes can be migrated there (see [CHANGELOG.md](CHANGELOG.md)), and
+rerunning the same update resumes it. Earlier outputs keep their recorded
+source fingerprint and still verify.
 
 ## Running inside OpenMausBot
 
@@ -184,8 +231,8 @@ production-wide budget enforcement. Automatic loudness normalization for the
 explainer and global lock stale recovery remain deferred. Oversized/failed
 outputs are not published.
 
-Source fingerprints cover `src/`, `package.json`, `tsconfig.json` and the studio's
-`pnpm-lock.yaml` and `pnpm-workspace.yaml`.
+Source fingerprints cover `src/`, `local-modes/`, `package.json`, `tsconfig.json`
+and the studio's `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
 The Git field is the baseline commit; uncommitted source is identified by file
 hashes, not misrepresented as that commit. Retain the corresponding source checkout
 as well as the output's input snapshots when reproducing a local run.
@@ -213,3 +260,14 @@ and [media rendering](https://www.remotion.dev/docs/renderer/render-media) APIs.
 The team's design guide, kept by its maintainers outside this folder,
 remains the authority for team roles, storage, spending and creative
 acceptance.
+
+## License and security
+
+The studio's own code is MIT-licensed ([LICENSE](LICENSE)). Remotion is not:
+it has its own license, under which some companies need a paid company
+license; check [remotion.dev/license](https://www.remotion.dev/license)
+before production use. Fonts are the Fontsource packages' own (OFL).
+
+Never commit `local.env` or anything in `work/`; both are git-ignored. Report
+a security problem privately to the maintainers through GitHub's private
+vulnerability reporting rather than in a public issue.

@@ -3,9 +3,9 @@ import {z} from 'zod';
 const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/);
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 export const FileRef = z.strictObject({path: z.string().min(1), sha256: z.string().regex(/^[a-f0-9]{64}$/)});
-const FormatSchema = z.strictObject({width: z.literal(1080), height: z.literal(1920), fps: z.literal(30), duration_seconds: z.number().finite().positive(), codec: z.literal('h264'), container: z.literal('mp4')});
-const LimitsSchema = z.strictObject({max_operation_attempts: z.number().int().positive(), max_runtime_seconds: z.number().positive().finite(), max_input_bytes: z.number().int().positive(), max_output_bytes: z.number().int().positive(), max_frames: z.number().int().positive(), concurrency: z.literal(1)});
-const AssetSchema = <K extends [string, ...string[]]>(kinds: K) => z.strictObject({asset_id: id, kind: z.enum(kinds), file: FileRef, provenance: z.string().min(1), usage_rights: z.string().min(1)});
+export const FormatSchema = z.strictObject({width: z.literal(1080), height: z.literal(1920), fps: z.literal(30), duration_seconds: z.number().finite().positive(), codec: z.literal('h264'), container: z.literal('mp4')});
+export const LimitsSchema = z.strictObject({max_operation_attempts: z.number().int().positive(), max_runtime_seconds: z.number().positive().finite(), max_input_bytes: z.number().int().positive(), max_output_bytes: z.number().int().positive(), max_frames: z.number().int().positive(), concurrency: z.literal(1)});
+export const AssetSchema = <K extends [string, ...string[]]>(kinds: K) => z.strictObject({asset_id: id, kind: z.enum(kinds), file: FileRef, provenance: z.string().min(1), usage_rights: z.string().min(1)});
 /** The narrated explainer job; a job without `mode` is this one. */
 export const JobSchema = z.strictObject({
   schema_version: z.literal('1.0'),

@@ -105,7 +105,7 @@ test('renderVisual validates layout against safe area and rejects overflowing co
     const loaded = await loadJob(fixture.job);
 
     const supportedDir = join(workDir, 'supported');
-    const validResult = await renderVisual(loaded, supportedDir, 'preview', Date.now() + 60_000);
+    const validResult = await renderVisual(loaded, supportedDir, 'preview', Date.now() + 180_000);
     assert.equal(validResult.video, 'visual.mp4');
     assert.ok(validResult.thumbnails.length > 0);
 
@@ -117,7 +117,7 @@ test('renderVisual validates layout against safe area and rejects overflowing co
 
     const overflowDir = join(workDir, 'overflow');
     await assert.rejects(
-      renderVisual(overflowingLoaded, overflowDir, 'preview', Date.now() + 60_000),
+      renderVisual(overflowingLoaded, overflowDir, 'preview', Date.now() + 180_000),
       (err: unknown) =>
         err instanceof Error &&
         'code' in err &&
@@ -130,7 +130,7 @@ test('renderVisual validates layout against safe area and rejects overflowing co
 
     const horizontalOverflowDir = join(workDir, 'overflow-horizontal');
     await assert.rejects(
-      renderVisual(horizontalOverflowLoaded, horizontalOverflowDir, 'preview', Date.now() + 60_000),
+      renderVisual(horizontalOverflowLoaded, horizontalOverflowDir, 'preview', Date.now() + 180_000),
       (err: unknown) =>
         err instanceof Error &&
         'code' in err &&

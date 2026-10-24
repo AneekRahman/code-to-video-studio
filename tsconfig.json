@@ -16,5 +16,5 @@
     "noEmit": true,
     "types": ["node", "react", "react-dom"]
   },
-  "include": ["src", "scripts", "tests"]
+  "include": ["src", "scripts", "tests", "local-modes", "templates"]
 }

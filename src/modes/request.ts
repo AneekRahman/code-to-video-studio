@@ -1,8 +1,8 @@
 import {z} from 'zod';
 import {readJson} from '../files.ts';
 import {StudioError} from '../errors.ts';
-import {ModeIdSchema} from './mode.ts';
-import {modes} from './registry.ts';
+import {ModeIdSchema, reservedModeIdPrefix} from './mode.ts';
+import {registry, type Registry} from './registry.ts';
 
 const text = z.string().trim().min(1);
 
@@ -31,24 +31,27 @@ export const ModeRequestSchema = z.strictObject({
 });
 export type ModeRequest = z.infer<typeof ModeRequestSchema>;
 
-export async function checkModeRequest(path: string) {
+export async function checkModeRequest(path: string, current: Registry = registry) {
   const request = await readJson(path, ModeRequestSchema);
-  if (modes.some(mode => mode.card.id === request.mode_id)) {
-    throw new StudioError('MODE_EXISTS', `Mode "${request.mode_id}" is already registered; use it, or choose another id`, {registered: modes.map(m => m.card.id)});
+  if (request.mode_id.startsWith(reservedModeIdPrefix)) throw new StudioError('MODE_ID_RESERVED', `Mode ids starting with ${reservedModeIdPrefix} are reserved for the studio's tests; choose another id`);
+  const taken = [...current.modes.map(mode => mode.card.id), ...current.unavailable.map(mode => mode.id)];
+  if (taken.includes(request.mode_id)) {
+    throw new StudioError('MODE_EXISTS', `Mode "${request.mode_id}" already exists; use it, or choose another id`, {registered: taken});
   }
   const day = request.requested_at.slice(0, 10);
+  const directory = `local-modes/${request.mode_id}`;
   return {
     status: 'valid' as const,
     mode_id: request.mode_id,
     first_video: request.first_video,
     plan: `plans/${day}-cannot-make-${request.mode_id}-videos/plan.md`,
-    mode_directory: `src/modes/${request.mode_id}/`,
-    skill: `skills/${request.mode_id}.md`,
+    mode_directory: `${directory}/`,
+    skill: `${directory}/skill.md`,
     next: [
       'Write the plan from this request, with the stages and what each stage sample will show; get the person to approve it.',
-      'Build stage by stage; send a sample after each stage and wait for the person\'s review before the next.',
-      'Register the mode in src/modes/registry.ts, regenerate catalog/modes.json, and add its skill, templates and tests.',
-      'Update the studio README, DEFERRED and component catalog, record evidence in the plan, then commit once the person approves.',
+      `Build stage by stage inside ${directory}/, importing studio code only from src/mode-api.ts and src/rendering/mode-api.tsx; send a sample after each stage and wait for the person's review before the next.`,
+      `Export the mode as the default export of ${directory}/mode.ts, with a mock-provider fixture; pnpm studio modes must list it and pnpm test:modes must pass.`,
+      'Record evidence in the plan, then commit the mode folder and plan on the workspace branch once the person approves.',
     ],
   };
 }

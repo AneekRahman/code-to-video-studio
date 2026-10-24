@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:release
+      - run: pnpm studio prepare-browser
+      - name: doctor
+        run: pnpm --silent studio doctor | tee doctor.json && grep -q '"status":"ready"' doctor.json
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - name: modes, with the starter template installed as a local mode
+        run: cp -R templates/local-mode local-modes/example-title-card && pnpm test:modes

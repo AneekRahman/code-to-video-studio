@@ -16,7 +16,8 @@ import {generateAudio} from './audio.ts';
 import {packageStory} from './modes/isometric-art-zombie-apocalypse/package.ts';
 import {createElevenLabsProvider} from './audiogen/elevenlabs.ts';
 import {createMockAudioProvider} from './audiogen/mock.ts';
-import {modeCatalog} from './modes/registry.ts';
+import {modeCatalog, requireNoCollisions} from './modes/registry.ts';
+import {updateStudio} from './update.ts';
 import {doctor} from './doctor.ts';
 import {ensureBrowser} from '@remotion/renderer';
 import {checkModeRequest} from './modes/request.ts';
@@ -44,8 +45,14 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}}});
   const command = positionals[0];
+  if (command === 'doctor') return doctor();
+  if (command === 'update') {
+    requireCondition(values.to, 'USAGE', 'update requires --to <release tag> [--remote <name, default upstream>]');
+    return updateStudio({to: values.to, remote: values.remote});
+  }
+  requireNoCollisions();
   if (command === 'generate-plates') {
     requireCondition(values.plates && values.out, 'USAGE', 'generate-plates requires --plates <plates.json> --out <directory under work/> [--provider nim|mock] [--only id,id]');
     requireCondition(!values.provider || values.provider === 'nim' || values.provider === 'mock', 'USAGE', 'Supported image providers: nim, mock');
@@ -72,7 +79,6 @@ async function main() {
   }
   if (command === 'schemas') return {schema_version: '1.0', schemas: schemas()};
   if (command === 'catalog') return JSON.parse(await readFile(new URL('../catalog/components.json', import.meta.url), 'utf8'));
-  if (command === 'doctor') return doctor();
   if (command === 'prepare-browser') return {status: 'browser_ready', browser: (await ensureBrowser()).type};
   if (command === 'modes') return modeCatalog();
   if (command === 'check-mode-request') {
@@ -83,7 +89,7 @@ async function main() {
     requireCondition(values.result, 'USAGE', 'verify requires --result <output directory>');
     return {status: 'verified', result: await verifyArtifacts(values.result)};
   }
-  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; schemas; verify --result <directory>');
+  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; update --to <tag>; schemas; verify --result <directory>');
   if (command === 'validate' || command === 'compile') {
     const loaded = await loadAnyJob(values.job);
     return {status: 'validated', job_id: loaded.job.job_id, mode: loaded.mode, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};

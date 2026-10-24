@@ -3,12 +3,15 @@
 Trigger: Any new video request, from a person in an OpenMausBot conversation
 or from a Showrunner brief, before any script, plate, audio or job work.
 
-Inputs: The request or brief, and the published mode catalog
-(`catalog/modes.json`, also `pnpm studio modes`).
+Inputs: The request or brief, and the mode catalog from
+`pnpm studio modes`: shipped modes, this workspace's local modes, and any
+local modes that are unavailable (with the reason).
 
 Method:
 
-1. Read every card's `use_when` and `not_for`. Choose a specialised mode
+1. Consider only the modes in `modes`; never offer one listed under
+   `unavailable` (report its reason to the person instead, when it would
+   have fitted). Read every card's `use_when` and `not_for`. Choose a specialised mode
    only when the request matches one of its `use_when` lines and none of its
    `not_for` lines. Matching is a judgment on what the video is, not on
    keywords: a zombie-themed birthday invitation is not a zombie survival
@@ -32,7 +35,8 @@ Method:
      mode would standardise.
 4. Write the chosen id in the job's `mode` field. A job without `mode` is an
    explainer job; a job naming an unregistered mode fails with
-   `UNKNOWN_MODE`.
+   `UNKNOWN_MODE`, and one naming an unavailable local mode with
+   `MODE_UNAVAILABLE`.
 
 Permitted tools: The mode catalog and the OpenMausBot question card. This
 instruction grants no tools, credentials or access.
@@ -47,5 +51,5 @@ Examples: "Explain three ways to save on groceries" → explainer, offer made.
 "Rules for surviving the first night of the outbreak, in the isometric style"
 → `isometric-art-zombie-apocalypse`, no offer.
 
-Evidence: [mode tests](../tests/modes.node-test.ts) and the
-[mode catalog](../catalog/modes.json).
+Evidence: [mode tests](../tests/modes.node-test.ts) and
+[local mode tests](../tests/local-modes.node-test.ts).

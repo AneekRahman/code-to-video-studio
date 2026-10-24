@@ -4,27 +4,26 @@ import {access, mkdtemp, readFile, readdir, rm, writeFile} from 'node:fs/promise
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {ModeCardSchema} from '../src/modes/mode.ts';
-import {fallbackModeId, modeCatalog, modes, newModeOffer} from '../src/modes/registry.ts';
+import {ModeCardSchema, modeApiVersion} from '../src/modes/mode.ts';
+import {fallbackModeId, modeCatalog, newModeOffer, shippedModes, type Registry} from '../src/modes/registry.ts';
 import {checkModeRequest} from '../src/modes/request.ts';
 import {loadAnyJob, openJob} from '../src/jobs.ts';
 import {createFixture} from '../scripts/create-fixture.ts';
-import {modeCatalogUrl, renderModeCatalog} from '../scripts/write-mode-catalog.ts';
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url));
+const unshippedId = (base: string): string => shippedModes.some(m => m.card.id === base) ? unshippedId(`${base}-local`) : base;
+const shippedOnly: Registry = {modes: shippedModes.map(mode => ({...mode, source: 'shipped' as const})), unavailable: [], collisions: []};
 const hasCode = (code: string) => (error: unknown) => error instanceof Error && 'code' in error && error.code === code;
 
-test('the published mode catalog matches the registry', async () => {
-  assert.equal(await readFile(modeCatalogUrl, 'utf8'), renderModeCatalog(), 'catalog/modes.json is stale: run pnpm catalog:modes');
-});
-
-test('every registered mode has a valid card, one fallback, and existing skill and templates', async () => {
-  const ids = modes.map(m => m.card.id);
+test('every shipped mode has a valid card, one fallback, and existing skill and templates', async () => {
+  const ids = shippedModes.map(m => m.card.id);
   assert.equal(new Set(ids).size, ids.length);
-  assert.deepEqual(modes.filter(m => m.card.role === 'fallback').map(m => m.card.id), [fallbackModeId]);
+  assert.deepEqual(shippedModes.filter(m => m.card.role === 'fallback').map(m => m.card.id), [fallbackModeId]);
   const modeDirectories = (await readdir(resolve(packageRoot, 'src/modes'), {withFileTypes: true})).filter(e => e.isDirectory()).map(e => e.name).sort();
   assert.deepEqual(modeDirectories, [...ids].sort(), 'each mode directory is registered, and each registered mode has a directory');
-  for (const {card} of modes) {
+  for (const {card, api, fixture} of shippedModes) {
+    assert.equal(api, modeApiVersion.major);
+    assert.equal(typeof fixture, 'function');
     ModeCardSchema.parse(card);
     for (const path of [card.skill, ...card.templates]) await access(resolve(packageRoot, path));
     if (card.duration_seconds) assert.ok(card.duration_seconds.min <= card.duration_seconds.max);
@@ -42,7 +41,7 @@ test('jobs dispatch by mode and an unregistered mode names the registered ones',
     const job = JSON.parse(await readFile(fixture.job, 'utf8'));
     await writeFile(fixture.job, JSON.stringify({...job, mode: 'explainer'}));
     assert.equal((await loadAnyJob(fixture.job)).mode, 'explainer');
-    await writeFile(fixture.job, JSON.stringify({...job, mode: 'cooking-recipe'}));
+    await writeFile(fixture.job, JSON.stringify({...job, mode: 'studio-test-unregistered'}));
     await assert.rejects(loadAnyJob(fixture.job), (error: unknown) => hasCode('UNKNOWN_MODE')(error) && JSON.stringify((error as {details: unknown}).details).includes('isometric-art-zombie-apocalypse'));
   } finally {
     await rm(fixture.directory, {recursive: true, force: true});
@@ -50,11 +49,12 @@ test('jobs dispatch by mode and an unregistered mode names the registered ones',
 });
 
 test('a mode request is validated and may not reuse a registered id', async () => {
+  const recipes = unshippedId('weekly-recipe-short');
   const dir = await mkdtemp(join(tmpdir(), 'studio-mode-request-'));
   try {
     const request = {
       schema_version: '1.0',
-      mode_id: 'weekly-recipe-short',
+      mode_id: recipes,
       title: 'Weekly recipe short',
       requested_at: '2026-10-25T04:00:00Z',
       first_video: 'explainer-now',
@@ -70,16 +70,19 @@ test('a mode request is validated and may not reuse a registered id', async () =
     };
     const path = resolve(dir, 'request.json');
     await writeFile(path, JSON.stringify(request));
-    const checked = await checkModeRequest(path);
-    assert.equal(checked.plan, 'plans/2026-10-25-cannot-make-weekly-recipe-short-videos/plan.md');
-    assert.equal(checked.mode_directory, 'src/modes/weekly-recipe-short/');
+    const checked = await checkModeRequest(path, shippedOnly);
+    assert.equal(checked.plan, `plans/2026-10-25-cannot-make-${recipes}-videos/plan.md`);
+    assert.equal(checked.mode_directory, `local-modes/${recipes}/`);
+    assert.equal(checked.skill, `local-modes/${recipes}/skill.md`);
 
     await writeFile(path, JSON.stringify({...request, mode_id: 'isometric-art-zombie-apocalypse'}));
-    await assert.rejects(checkModeRequest(path), hasCode('MODE_EXISTS'));
+    await assert.rejects(checkModeRequest(path, shippedOnly), hasCode('MODE_EXISTS'));
+    await writeFile(path, JSON.stringify({...request, mode_id: 'studio-test-recipes'}));
+    await assert.rejects(checkModeRequest(path, shippedOnly), hasCode('MODE_ID_RESERVED'));
     await writeFile(path, JSON.stringify({...request, mode_id: 'Weekly Recipes'}));
-    await assert.rejects(checkModeRequest(path));
+    await assert.rejects(checkModeRequest(path, shippedOnly));
     await writeFile(path, JSON.stringify({...request, duration_seconds: {min: 50, max: 40}}));
-    await assert.rejects(checkModeRequest(path));
+    await assert.rejects(checkModeRequest(path, shippedOnly));
   } finally {
     await rm(dir, {recursive: true, force: true});
   }

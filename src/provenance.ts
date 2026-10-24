@@ -1,4 +1,4 @@
-import {readFile, readdir, realpath} from 'node:fs/promises';
+import {readFile, readdir, realpath, stat} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {packageRoot} from './render.ts';
 import {sha256} from './files.ts';
@@ -20,6 +20,7 @@ export async function sourceProvenance(root = packageRoot) {
     }
   }
   await walk('src');
+  if (await stat(resolve(canonicalRoot, 'local-modes')).then(info => info.isDirectory(), () => false)) await walk('local-modes');
   for (const name of ['package.json', 'tsconfig.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml']) hashes[name] = sha256(await readFile(resolve(canonicalRoot, name)));
   let gitCommit: string | null = null;
   try {gitCommit = (await runTool('git', ['-C', canonicalRoot, 'rev-parse', 'HEAD'])).trim();} catch {gitCommit = null;}

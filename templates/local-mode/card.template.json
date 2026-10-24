@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "title": "Your title",
+  "subtitle": "A short line under it",
+  "background": "#101820",
+  "accent": "#f2aa4c",
+  "duration_seconds": 3
+}
