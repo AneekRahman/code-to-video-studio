@@ -2,11 +2,10 @@ import {cp, lstat, mkdir, mkdtemp, readFile, realpath, rename, rm, stat} from 'n
 import {basename, extname, join, resolve} from 'node:path';
 import {z} from 'zod';
 import {canonicalizeProspective, isWithin, readJson, sha256, writeJson} from './files.ts';
-import {loadJob} from './load.ts';
+import {loadAnyJob, runtimeFor} from './jobs.ts';
 import {StudioError, requireCondition} from './errors.ts';
 import {inspect} from './media.ts';
-import {finishAudio} from './mix.ts';
-import {packageRoot, renderVisual} from './render.ts';
+import {packageRoot} from './render.ts';
 import {sourceProvenance} from './provenance.ts';
 import {runTool} from './process.ts';
 
@@ -66,7 +65,7 @@ export async function verifyArtifacts(dir: string) {
 
 export async function executeJob(jobPath: string, out: string, operation: Operation, visualManifest?: string) {
   const started = Date.now();
-  const loaded = await loadJob(jobPath, started);
+  const loaded = await loadAnyJob(jobPath, started);
   const deadline = started + loaded.job.limits.max_runtime_seconds * 1000;
   const canonicalPackage = await realpath(packageRoot);
   const prospectiveRoot = await canonicalizeProspective(out);
@@ -158,10 +157,12 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
     await mkdir(snapshot);
     const snapshotJob = structuredClone(loaded.job);
     const snapshotFiles: string[] = [];
-    for (const key of Object.keys(loaded.paths) as (keyof typeof loaded.paths)[]) {
-      const name = `input-${key}${extname(loaded.paths[key])}`;
-      await cp(loaded.paths[key], resolve(snapshot, name), {errorOnExist: true, force: false});
-      snapshotJob.inputs[key].path = name;
+    const inputPaths: Record<string, string> = loaded.paths;
+    const snapshotInputs: Record<string, {path: string}> = snapshotJob.inputs;
+    for (const [key, path] of Object.entries(inputPaths)) {
+      const name = `input-${key}${extname(path)}`;
+      await cp(path, resolve(snapshot, name), {errorOnExist: true, force: false});
+      snapshotInputs[key]!.path = name;
       snapshotFiles.push(`inputs/${name}`);
     }
     for (const asset of snapshotJob.assets) {
@@ -172,12 +173,13 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
     }
     await writeJson(resolve(snapshot, 'job.json'), snapshotJob);
     snapshotFiles.push('inputs/job.json');
-    const execution = await loadJob(resolve(snapshot, 'job.json'), started);
+    const execution = await loadAnyJob(resolve(snapshot, 'job.json'), started);
+    const runtime = runtimeFor(execution);
     const artifacts: string[] = [...snapshotFiles];
     let finalVideo: string;
     const expected = {...loaded.job.format, duration_seconds: loaded.job.format.duration_seconds};
     if (operation !== 'finish') {
-      const visual = await renderVisual(execution, stage, operation === 'preview' ? 'preview' : 'render', deadline);
+      const visual = await runtime.renderVisual(stage, operation === 'preview' ? 'preview' : 'render', deadline);
       artifacts.push(visual.video, ...visual.thumbnails);
       const report = await inspect(resolve(stage, visual.video), {width: visual.width, height: visual.height, fps: expected.fps, duration_seconds: expected.duration_seconds, audio: false}, deadline - Date.now());
       await writeJson(resolve(stage, 'visual-qa.json'), report);
@@ -195,14 +197,15 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
     } else finalVideo = '';
     if (operation === 'run' || operation === 'finish') {
       requireCondition(visualPath, 'MISSING_VISUAL', 'Audio finishing needs a visual master');
-      finalVideo = await finishAudio(execution, visualPath, stage, deadline);
+      const finished = await runtime.finish(visualPath, stage, deadline);
+      finalVideo = finished.video;
       await writeJson(resolve(stage, 'final-qa.json'), await inspect(resolve(stage, finalVideo), {width: expected.width, height: expected.height, fps: expected.fps, duration_seconds: expected.duration_seconds, audio: true}, deadline - Date.now()));
-      artifacts.push(finalVideo, 'final-qa.json');
+      artifacts.push(finalVideo, 'final-qa.json', ...finished.artifacts);
     }
     await writeJson(resolve(stage, 'timeline.json'), loaded.timeline);
     await writeJson(resolve(stage, 'provenance.json'), {source, job: loaded.job, input_hash: loaded.inputHash, original_manifest_hash: loaded.manifestHash, base_visual: base ?? null, actual_provider_spend_usd: 0, provider_requests: 0, local_runtime_ms: Date.now() - started, technical_validation_only: true});
     artifacts.push('timeline.json', 'provenance.json');
-    requireCondition((await loadJob(jobPath, started)).inputHash === loaded.inputHash, 'INPUT_CHANGED', 'Job changed during execution');
+    requireCondition((await loadAnyJob(jobPath, started)).inputHash === loaded.inputHash, 'INPUT_CHANGED', 'Job changed during execution');
     requireCondition((await sourceProvenance()).source_sha256 === source.source_sha256, 'SOURCE_CHANGED', 'Source changed during rendering');
     const pinnedArtifacts = await Promise.all(artifacts.map(async name => {const bytes = await readFile(resolve(stage!, name));return {name, sha256: sha256(bytes), bytes: bytes.length};}));
     requireCondition(pinnedArtifacts.reduce((sum, a) => sum + a.bytes, 0) <= loaded.job.limits.max_output_bytes, 'OUTPUT_LIMIT', 'Job artifacts exceed their byte allowance');
