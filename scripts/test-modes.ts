@@ -5,7 +5,7 @@ import {executeJob, verifyArtifacts} from '../src/runner.ts';
 import {packageRoot} from '../src/render.ts';
 import {registry, type Registry} from '../src/modes/registry.ts';
 
-export type ModeConformance = {mode: string; source: string; pass: boolean; detail: string};
+export type ModeConformance = {mode: string; source: string; pass: boolean; detail: string; seconds?: number};
 
 /** Renders every registered mode's mock fixture end to end and checks its result; a run directory is kept only when something failed. */
 export async function checkModeConformance(current: Registry = registry, only?: readonly string[]) {
@@ -13,6 +13,8 @@ export async function checkModeConformance(current: Registry = registry, only?: 
   const results: ModeConformance[] = [];
   for (const mode of current.modes.filter(m => !only?.length || only.includes(m.card.id))) {
     const dir = resolve(runRoot, mode.card.id);
+    const started = Date.now();
+    const seconds = () => Math.round((Date.now() - started) / 1000);
     try {
       await mkdir(resolve(dir, 'inputs'), {recursive: true, mode: 0o700});
       const job = await mode.fixture(resolve(dir, 'inputs'));
@@ -25,10 +27,10 @@ export async function checkModeConformance(current: Registry = registry, only?: 
         const failed = (quality.checks ?? []).filter(check => !check.pass).map(check => check.check_id);
         if (quality.all_checks_passed !== true) throw new Error(`quality checks failed: ${failed.join(', ') || 'all_checks_passed is not true'}`);
       }
-      results.push({mode: mode.card.id, source: mode.source, pass: true, detail: `${result.final_video} verified`});
+      results.push({mode: mode.card.id, source: mode.source, pass: true, detail: `${result.final_video} verified`, seconds: seconds()});
     } catch (error) {
       const code = error && typeof error === 'object' && 'code' in error ? `${String(error.code)}: ` : '';
-      results.push({mode: mode.card.id, source: mode.source, pass: false, detail: `${code}${error instanceof Error ? error.message : String(error)}`});
+      results.push({mode: mode.card.id, source: mode.source, pass: false, detail: `${code}${error instanceof Error ? error.message : String(error)}`, seconds: seconds()});
     }
   }
   for (const {id, reason} of current.unavailable) results.push({mode: id, source: 'local', pass: false, detail: `unavailable: ${reason}`});

@@ -5,8 +5,13 @@ import {StudioError, requireCondition} from './errors.ts';
 import {packageRoot} from './render.ts';
 import {runTool} from './process.ts';
 
-/** Remotion's headless Chrome needs a GPU-backed GL implementation for three.js layers. */
-const chromiumOptions = {gl: 'angle' as const};
+/**
+ * three.js layers need WebGL in Remotion's headless Chrome (Remotion 4.0): ANGLE on the GPU on macOS, and
+ * SwiftShader through ANGLE (`swangle`, on the CPU) elsewhere, because GPU-less Linux hosts cannot create an
+ * `angle` context.
+ */
+export const glRenderer = process.platform === 'darwin' ? 'angle' as const : 'swangle' as const;
+const chromiumOptions = {gl: glRenderer};
 
 export const sharedEntryPoint = resolve(packageRoot, 'src/rendering/entry.tsx');
 
