@@ -25,3 +25,5 @@ Mode API 1.0.
 - Every mode has a mock fixture; `pnpm test:modes` renders and verifies them.
 - `pnpm studio update --to <tag>` merges a release only after every check
   passes.
+- WebGL uses ANGLE on macOS and `swangle` (SwiftShader, on the CPU)
+  elsewhere, so the isometric mode renders on GPU-less Linux.

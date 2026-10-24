@@ -17,7 +17,7 @@ export const releaseChecks: UpdateCheck[] = [
   {check_id: 'typecheck', command: 'pnpm', args: ['typecheck'], timeout_ms: minutes(5)},
   {check_id: 'lint', command: 'pnpm', args: ['lint'], timeout_ms: minutes(5)},
   {check_id: 'tests', command: 'pnpm', args: ['test'], timeout_ms: minutes(20)},
-  {check_id: 'modes', command: 'pnpm', args: ['test:modes'], timeout_ms: minutes(30)},
+  {check_id: 'modes', command: 'pnpm', args: ['test:modes'], timeout_ms: minutes(60)},
   {check_id: 'doctor', command: 'pnpm', args: ['--silent', 'studio', 'doctor'], timeout_ms: minutes(2), expectJson: stdout => /"status":"ready"/.test(stdout)},
 ];
 
