@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "mode": "isometric-art-zombie-apocalypse",
+  "plates": [
+    {
+      "plate_id": "shop-dusk",
+      "framing": "diorama",
+      "phase": "dusk",
+      "subject": "A small neighbourhood corner grocery store with a striped awning, crates of fruit by the entrance, a shopping cart, a bench and a lamp post on the sidewalk, a quiet road curving past the front of the tile.",
+      "seed": 1101,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "plate_id": "street-twilight",
+      "framing": "diorama",
+      "phase": "twilight",
+      "subject": "A suburban street intersection with a parked car whose driver door hangs open and hazard lights blink, a fallen bicycle, a spilled paper grocery bag with oranges rolling on the asphalt, hedges and a fire hydrant.",
+      "seed": 1202,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "plate_id": "chase-road-night",
+      "framing": "diorama",
+      "phase": "night",
+      "subject": "A long straight suburban road running diagonally across the tile from the bottom-left corner to the top-right corner, ending at a small two-storey house whose porch light glows warm at the far top-right end. Along the road an overturned car with blinking hazard lights, a sedan crashed into a bent lamp post, a trash bin smouldering with an orange glow, scattered newspapers, one flickering streetlight casting a cone of light, the asphalt lane down the middle left clear and open.",
+      "seed": 1307,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "plate_id": "porch-night",
+      "framing": "close-diorama",
+      "phase": "night",
+      "subject": "The front porch of a cosy two-storey wooden house, three wooden steps up to a heavy front door, a single warm porch light, a doormat, potted plants, an open picket fence gate in the foreground.",
+      "seed": 1404,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "plate_id": "living-room-night",
+      "framing": "cutaway-room",
+      "phase": "interior-night",
+      "subject": "A small cosy living room: on the left wall the front door secured with a chain and two deadbolts, on the right wall a window with wooden boards nailed across it and moonlight leaking through the gaps, an old CRT television glowing on a low cabinet, a worn sofa, a rug, a floor lamp, a side table with a flashlight.",
+      "seed": 1505,
+      "width": 768,
+      "height": 1344
+    },
+    {
+      "plate_id": "living-room-blackout",
+      "framing": "cutaway-room",
+      "phase": "blackout",
+      "subject": "A small cosy living room: on the left wall the front door secured with a chain and two deadbolts, on the right wall a window with wooden boards nailed across it and moonlight leaking through the gaps, an old CRT television glowing on a low cabinet, a worn sofa, a rug, a floor lamp, a side table with a flashlight.",
+      "seed": 1505,
+      "width": 768,
+      "height": 1344
+    }
+  ]
+}
