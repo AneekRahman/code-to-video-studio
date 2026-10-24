@@ -206,6 +206,138 @@
       "performance": "single render concurrency; benchmark actual job",
       "accessibility": "mobile readability and contrast require review",
       "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "IsoStory",
+      "purpose": "Narration-timed isometric story composition: plates, actors, atmosphere, overlays",
+      "inputs": {
+        "story": "StorySchema compiled with SegmentTimingSchema",
+        "plates": "generated plate set"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "Bebas Neue, VT323, Inter 800 (OFL, pinned @fontsource)",
+      "duration": "shot lengths follow measured narration"
+    },
+    {
+      "name": "ClayRig",
+      "purpose": "Code-drawn capsule clay character (hero, zombie, double) with procedural gaits",
+      "inputs": {
+        "rig": "hero|zombie|double",
+        "gait": "idle|walk|run|shamble|lunge|knock|still",
+        "path": "plate-space waypoints",
+        "height": "px"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "none",
+      "duration": "gait cycles phased by distance travelled; knock contacts drive knock sound cues"
+    },
+    {
+      "name": "IsoAtmosphere",
+      "purpose": "Ground fog, particles, flicker, heartbeat vignette, grain, per-phase grade",
+      "inputs": {
+        "atmosphere": "fog, particles, flicker, heartbeat_pulse",
+        "grade": "dusk|twilight|night|interior-night|blackout"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "none",
+      "duration": "per shot"
+    },
+    {
+      "name": "RuleCard",
+      "purpose": "Numbered survival rule revealed word by word on the spoken words",
+      "inputs": {
+        "rule": "segment_id, number, text <=90 characters"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "Bebas Neue",
+      "duration": "card on screen at least words/3 + 0.5 s (quality.json)"
+    },
+    {
+      "name": "BroadcastChrome",
+      "purpose": "Emergency broadcast bar, blinking LIVE, scanlines and teletype intro",
+      "inputs": {
+        "broadcast": "shot_id, until_shot_id, label, intro_segment_id"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "VT323",
+      "duration": "spans the broadcast shots"
+    },
+    {
+      "name": "CaptionBand",
+      "purpose": "Three-word phrase captions with the active word highlighted; the double's lines styled apart",
+      "inputs": {
+        "segments": "timed narration segments"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "Inter 800",
+      "duration": "follows word timing"
+    },
+    {
+      "name": "WindowShadows",
+      "purpose": "Silhouettes and moonlight glow in a plate window region",
+      "inputs": {
+        "region": "plate fractions x,y,w,h",
+        "count": "1-4"
+      },
+      "version": "0.1.0",
+      "external_network": false,
+      "deprecation_status": "active",
+      "mode": "isometric-art-zombie-apocalypse",
+      "validation": "tests/iso-scene, story, sound and story-job node tests; reviewed renders recorded in the plan",
+      "preview": "preview-story stills and contact-sheet.jpg; job run contact-sheet.png",
+      "safe_area": "Instagram Reels safe area top 230, bottom 1520, left 80, right 940 (px at 1080x1920)",
+      "performance": "48 s story renders at 1080x1920 in about 2.5 min with concurrency 1 on Apple silicon",
+      "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
+      "fonts": "none",
+      "duration": "per shot"
     }
   ]
 }

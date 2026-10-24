@@ -8,8 +8,10 @@ implements the local fixture rendering tool, not a configured production bot.
 Keep source, dependencies, contracts, catalog and skills here. Put jobs/media,
 credentials, caches and render outputs outside this source tree. Preserve strict
 contracts, pinned file hashes, narrated timing and technical-only completion.
-Never add live provider calls, production storage, automatic acceptance, or
-publishing without explicit configured contracts. Existing repository comment
+Provider calls belong only in the explicit `generate-*` commands, read keys
+from the environment or the git-ignored `local.env`, and never run while
+rendering, mixing or validating a job. Never add production storage,
+automatic acceptance, or publishing without explicit configured contracts. Existing repository comment
 and isolated-verification rules apply.
 
 Run package typecheck/tests and scoped root lint after meaningful changes. Use

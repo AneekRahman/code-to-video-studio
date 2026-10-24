@@ -6,7 +6,11 @@ updated together under the [shared maintenance contract](../README.md).
 This implements the approved rendering-package-first step: a strict local job
 adapter, narration-driven timeline, eleven reusable components, six caption modes,
 Remotion previews/visual masters, explicit FFmpeg stereo audio finishing, technical QA,
-hash-verified artifacts and reproducibility snapshots. It is not a configured
+hash-verified artifacts and reproducibility snapshots. It also implements one
+narrative production mode, `isometric-art-zombie-apocalypse` (generated
+isometric plates animated with code-drawn rigs, generated narration, effects
+and music), described below and in
+[the mode skill](skills/isometric-horror-story.md). It is not a configured
 OpenMausBot profile or a production-ready nine-role team. Remaining decisions and
 missing capabilities are recorded in [DEFERRED.md](DEFERRED.md).
 
@@ -45,6 +49,69 @@ pnpm --filter @openmausbot/video-studio studio finish --job /absolute/inputs/job
 pnpm --filter @openmausbot/video-studio studio run --job /absolute/inputs/job.json --out /absolute/outputs
 pnpm --filter @openmausbot/video-studio studio verify --result /absolute/outputs/job/operation-identity
 ```
+
+Environment plates for the `isometric-art-zombie-apocalypse` mode are generated
+before any render, from a plate set such as
+`src/modes/isometric-art-zombie-apocalypse/plates.template.json`:
+
+```sh
+pnpm --filter @openmausbot/video-studio studio generate-plates --plates /absolute/plates.json --out /absolute/plates-out [--provider nim|mock] [--only plate-id,plate-id]
+```
+
+The `nim` provider calls hosted NVIDIA NIM FLUX 3 Image Klein with the
+`NVIDIA_NIM` key from the environment or the git-ignored package `local.env`.
+The output directory receives versioned plate files, `plates.json` (hash,
+composed prompt, seed, size, model, timing) and `contact-sheet.jpg`. Plates whose
+request is unchanged are reused without a provider call; a changed request
+writes a new version and never overwrites. Safety-filter refusals are reported
+per plate as `plates_incomplete`.
+
+A shot list (camera move, grade, atmosphere, transition and actors walking
+plate-space paths) is previewed against a plate directory with:
+
+```sh
+pnpm --filter @openmausbot/video-studio studio preview-shots --shots /absolute/shots.json --plates /absolute/plates-out --out /absolute/empty-preview-dir
+```
+
+It renders a silent half-resolution `preview.mp4`, two stills per shot and a
+contact sheet. Actors are code-drawn clay rigs rendered by `@remotion/three`
+through an orthographic isometric camera; headless Chrome runs with
+`gl: "angle"` for WebGL.
+
+```sh
+pnpm --filter @openmausbot/video-studio studio preview-story --story /absolute/story.json --plates /absolute/plates-out --out /absolute/empty-preview-dir [--timing /absolute/timing.json] [--stills-only]
+```
+
+It renders the full story (shots, narration captions, title, broadcast and
+rule cards) from a story file such as
+`src/modes/isometric-art-zombie-apocalypse/story.template.json`. Shot lengths
+follow the narration: without `--timing` they are estimated from word counts;
+a timing file must match the script word for word.
+
+```sh
+pnpm --filter @openmausbot/video-studio studio generate-audio --story /absolute/story.json --sound /absolute/sound.json --out /absolute/audio-out [--provider elevenlabs|mock]
+pnpm --filter @openmausbot/video-studio studio package-story --story /absolute/story.json --sound /absolute/sound.json --plates /absolute/plates-out --audio /absolute/audio-out --out /absolute/empty-job-dir [--job-id id]
+pnpm --filter @openmausbot/video-studio studio run --job /absolute/empty-job-dir/job.json --out /absolute/outputs
+```
+
+`generate-audio` reads `ELEVENLABS` from the environment or the git-ignored
+package `local.env`. It synthesises each narration segment with character
+timestamps, every sound effect and the music bed described by a sound file
+such as `src/modes/isometric-art-zombie-apocalypse/sound.template.json`, and
+writes MP3s, `audio.json` (hashes and request provenance) and `timing.json`.
+Unchanged requests are reused.
+
+`package-story` copies the story, sound design, timing, every used plate and
+every generated clip into a job directory and writes a `job.json` with
+`mode: "isometric-art-zombie-apocalypse"`, hashes, provenance and explicit
+limits. The job then runs through the same `validate`, `preview`, `render`,
+`finish`, `run` and `verify` commands as the explainer. Finishing mixes
+narration (levelled per clip), cues and ducked music to −14 LUFS integrated
+with at least 1 dB of true-peak headroom after AAC encoding, and pins
+`mix-report.json` and `quality.json`. The quality report holds the mode's
+rubric (hook, rule reading time, duration) and measured loudness, true peak,
+and black or silent stretches outside the story's declared cuts; it informs
+the Critic and does not accept the video. Rendering never calls a provider.
 
 `preview` renders a half-resolution full clip plus scene thumbnails/contact sheet;
 `render` produces the silent 1080x1920 H.264 visual master; `finish` consumes a
