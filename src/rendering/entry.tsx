@@ -15,6 +15,10 @@ import {
   StatCounter,
   StatSteps,
 } from './components.tsx';
+import {IsoHorror} from '../modes/isometric-art-zombie-apocalypse/rendering/scene.tsx';
+import type {IsoProps} from '../modes/isometric-art-zombie-apocalypse/shots.ts';
+import {IsoStory} from '../modes/isometric-art-zombie-apocalypse/rendering/story-scene.tsx';
+import type {StoryProps} from '../modes/isometric-art-zombie-apocalypse/story.ts';
 
 export function SceneContent({scene, stills, accent}: {scene: CompiledScene; stills: Record<string, string>; accent: string}) {
   const hasStill = scene.still_asset_id && stills[scene.still_asset_id];
@@ -199,8 +203,32 @@ const defaults: RenderProps = {
   font: 'unconfigured.woff2',
 };
 
+const isoDefaults: IsoProps = {width: 1080, height: 1920, fps: 30, durationInFrames: 30, plates: {}, shots: []};
+const storyDefaults: StoryProps = {...isoDefaults, segments: [], overlays: [], fonts: {display: 'unconfigured.woff2', mono: 'unconfigured.woff2', caption: 'unconfigured.woff2'}};
+
 function Root() {
   return (
+    <>
+    <Composition
+      id="IsoStory"
+      component={IsoStory}
+      width={1080}
+      height={1920}
+      fps={30}
+      durationInFrames={30}
+      defaultProps={storyDefaults}
+      calculateMetadata={({props}) => ({durationInFrames: props.durationInFrames, fps: props.fps, width: props.width, height: props.height})}
+    />
+    <Composition
+      id="IsoHorror"
+      component={IsoHorror}
+      width={1080}
+      height={1920}
+      fps={30}
+      durationInFrames={30}
+      defaultProps={isoDefaults}
+      calculateMetadata={({props}) => ({durationInFrames: props.durationInFrames, fps: props.fps, width: props.width, height: props.height})}
+    />
     <Composition
       id="VideoStudio"
       component={Explainer}
@@ -216,6 +244,7 @@ function Root() {
         height: props.timeline.height,
       })}
     />
+    </>
   );
 }
 
