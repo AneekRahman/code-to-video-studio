@@ -1,0 +1,211 @@
+{
+  "schema_version": "1.0",
+  "library_version": "0.1.0",
+  "status": "local-fixture-implementation",
+  "aspect_ratios": [
+    "9:16"
+  ],
+  "reference_fps": 30,
+  "components": [
+    {
+      "name": "SafeArea",
+      "version": "0.1.0",
+      "purpose": "Explicit brand margins for a vertical composition",
+      "inputs": {
+        "brand": "versioned brand contract",
+        "children": "React content"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "HookHeadline",
+      "version": "0.1.0",
+      "purpose": "Animated story-led scene title",
+      "inputs": {
+        "text": "string, <=100 characters",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "ImagePanel",
+      "version": "0.1.0",
+      "purpose": "Pinned raster artwork with deterministic slow zoom",
+      "inputs": {
+        "src": "staged local raster filename"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "ComparisonCard",
+      "version": "0.1.0",
+      "purpose": "Stacked comparison statements",
+      "inputs": {
+        "lines": "up to four short strings",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "ChecklistCard",
+      "version": "0.1.0",
+      "purpose": "Numbered supporting points",
+      "inputs": {
+        "lines": "up to four short strings",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "NarrativeCard",
+      "version": "0.1.0",
+      "purpose": "Story supporting statements without comparison contrast",
+      "inputs": {
+        "lines": "up to four short strings",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "StatCounter",
+      "version": "0.1.0",
+      "purpose": "Deterministic numeric count-up",
+      "inputs": {
+        "value": "finite number",
+        "suffix": "short string",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "StatSteps",
+      "version": "0.1.0",
+      "purpose": "Compact step-by-step points paired with stat callout",
+      "inputs": {
+        "lines": "up to four short strings",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "ProgressBar",
+      "version": "0.1.0",
+      "purpose": "Whole-video frame progress",
+      "inputs": {
+        "progress": "number clamped to [0,1]",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "CaptionTrack",
+      "version": "0.1.0",
+      "purpose": "Narration-driven phrase, highlight, karaoke, keyword, lower-third or none",
+      "inputs": {
+        "words": "compiled words for current scene",
+        "frame": "global frame",
+        "brand": "versioned brand including caption_mode"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    },
+    {
+      "name": "SceneNumber",
+      "version": "0.1.0",
+      "purpose": "Stable scene position in the composition",
+      "inputs": {
+        "index": "zero-based scene index",
+        "total": "scene count",
+        "accent": "hex color"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "package tests and render smoke; see plan for evidence",
+      "preview": "smoke output scene-*.png/contact-sheet.png; generated per fixture",
+      "safe_area": "configured in BrandSchema; no platform-specific profile selected",
+      "fonts": "pinned local font asset via StudioBrand",
+      "performance": "single render concurrency; benchmark actual job",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; no calibrated per-component duration bounds"
+    }
+  ]
+}
