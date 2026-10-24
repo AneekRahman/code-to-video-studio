@@ -6,6 +6,12 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## [Unreleased]
+
+- Automated mode migration system: `pnpm studio migrate [--mode <id>] [--to <version>] [--dry-run]` to inspect and execute mode codemod recipes.
+- Update pipeline auto-migration: `pnpm studio update --to <tag>` automatically checks local mode API versions on `update/<tag>` and runs registered migration recipes before running release conformance checks.
+- Migration recipe engine in `src/migrations/` with multi-hop version resolution and built-in recipes (`v0-to-v1` and `v1-to-v2`).
+
 ## v1.0.0
 
 Mode API 1.0.
