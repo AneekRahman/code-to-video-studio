@@ -1,5 +1,7 @@
 # Code-to-Video studio
 
+> For general AI agent indexing, autonomous setup, error troubleshooting matrices, and execution patterns across any environment, see [AGENT_README.md](AGENT_README.md).
+
 This folder is the Code-to-Video bot's studio: its working folder in
 OpenMausBot and the only folder it writes. It is a git clone of a studio
 release, on this workspace's own branch (`workspace/<name>`). Everything the

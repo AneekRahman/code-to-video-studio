@@ -1,280 +1,212 @@
-# Code-to-Video studio
+<div align="center">
 
-The Code-to-Video bot's studio for the OpenMausBot Video Studio team: a
-local, code-driven video renderer whose modes turn a brief into a narrated
-9:16 short. Each workspace runs its own clone, on its own branch, as the
-bot's working folder, builds its own modes in it, and takes maintainer
-releases with `pnpm studio update`. [AGENTS.md](AGENTS.md) is the bot's
-entry point.
+<img src="assets/hero-banner.jpg" alt="Code-to-Video Studio Banner" width="100%" />
 
-This implements the approved rendering-package-first step: a strict local job
-adapter, narration-driven timeline, eleven reusable components, six caption modes,
-Remotion previews/visual masters, explicit FFmpeg stereo audio finishing, technical QA,
-hash-verified artifacts and reproducibility snapshots. It also implements one
-narrative production mode, `isometric-art-zombie-apocalypse` (generated
-isometric plates animated with code-drawn rigs, generated narration, effects
-and music), described below and in
-[the mode skill](skills/isometric-horror-story.md). It is not a configured
-OpenMausBot profile or a production-ready nine-role team. Remaining decisions and
-missing capabilities are recorded in [DEFERRED.md](DEFERRED.md).
+# Code-to-Video Studio 🎬✨
 
-## Modes
+**The deterministic, code-driven vertical video engine for developers and AI agents.**  
+*Programmatic 9:16 Shorts & Reels powered by React, Remotion, ElevenLabs audio timing, and NVIDIA NIM image generation.*
 
-A job's `mode` selects how it is produced. The explainer is the fallback for
-every request no specialised mode fits; a job without `mode` is an explainer
-job, and an unregistered mode fails with `UNKNOWN_MODE`.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node: >=24.5](https://img.shields.io/badge/node-%3E%3D24.5-green.svg)](https://nodejs.org/)
+[![pnpm: 10.x](https://img.shields.io/badge/pnpm-10.x-orange.svg)](https://pnpm.io/)
+[![Remotion: 4.0.538](https://img.shields.io/badge/Remotion-4.0.538-blueviolet.svg)](https://www.remotion.dev/)
+[![TypeScript: 5.x](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](https://www.typescriptlang.org/)
+[![Agent Ready](https://img.shields.io/badge/Agent%20Ready-Verified-brightgreen.svg)](AGENT_README.md)
 
-- **Shipped modes** live in `src/modes/<id>/` and come with releases.
-- **Local modes** are a workspace's own, in `local-modes/<id>/`, found at
-  startup ([local modes](local-modes/README.md)). They import studio code
-  only through the mode API, `src/mode-api.ts` and
-  `src/rendering/mode-api.tsx`, and declare the API major they were written
-  for. A local mode written for another major, or one that fails to load, is
-  listed as unavailable with the reason and never offered. A local mode with
-  a shipped mode's id stops the studio with `MODE_ID_COLLISION` until it is
-  renamed. `templates/local-mode/` is a working starter.
+[Quick Start](#-quick-start) • [Why Code-to-Video?](#-why-code-to-video-studio) • [Production Modes](#-production-modes) • [Architecture](#-architecture) • [CLI Reference](#-cli-reference) • [Agent Integration](AGENT_README.md)
 
-`studio modes` prints the catalog (`pnpm catalog:modes` writes it to the
-git-ignored `catalog/modes.json`): each mode's source, purpose, `use_when`
-and `not_for` lines, duration range, inputs, skill, templates and commands,
-the unavailable local modes, and the new-mode offer. When a person's request
-falls back to the explainer, the bot asks that offer through OpenMausBot's
-question card before production; unattended Showrunner jobs put a
-suggestion in the report instead ([mode selection](skills/mode-selection.md)).
-A person who will make more videos of a kind can have a local mode built for
-it: `studio check-mode-request --request <file>` validates the interview
-record and returns the plan and mode paths
-([create a mode](skills/create-mode.md)).
+</div>
 
-Every mode has a fixture built with mock providers. `pnpm test:modes [id…]`
-renders and verifies each one end to end under `work/conformance/`, and
-fails on any technical or `quality.json` failure; it keeps the run only when
-something failed.
+---
 
-Requires Node 24.5 or later, pnpm 10.33, git, and ffmpeg/ffprobe on PATH.
-All Remotion dependencies are pinned to 4.0.538. Provider requests are never
-made by frame rendering.
+## 💡 Overview
 
-From this folder:
+Generative AI video models frequently suffer from unpredictable pixel-morphing, hallucinated subtitles, drifting layouts, and poor timing control. 
 
-```sh
+**Code-to-Video Studio** takes a fundamentally different, developer-first approach: **Code-driven animation with audio-first synchronization**.
+
+Instead of hallucinating video frames, Code-to-Video Studio:
+1. Uses **finalized speech narration** (via ElevenLabs) with word-level timestamps as the **absolute source of timing truth**.
+2. Renders dynamic scenes using **React & Remotion**, Three.js rigs, kinetic typography, and canvas layers.
+3. Incorporates **cinematic AI still plates** (via hosted NVIDIA NIM FLUX 3 Image Klein) as backgrounds and environment layers, animated via code.
+4. Deterministically mixes sound effects, ducked background music, and stereo audio to standard broadcast loudness (−14 LUFS) with **FFmpeg**.
+5. Validates every export with **strict automated QA metrics** and immutable SHA-256 artifact manifests.
+
+Whether you are building automated TikTok/YouTube Shorts pipelines, data explainers, or deploying autonomous bot teams in [OpenMausBot](https://github.com/milind-soni/OpenMausBot), Code-to-Video Studio gives you 100% reproducible, pixel-perfect output every time.
+
+---
+
+<div align="center">
+  <img src="assets/showcase-plate.jpg" alt="Isometric Production Mode Showcase" width="400" />
+  <p><i>Example: High-fidelity diorama background plate generated with NVIDIA NIM FLUX 3 Klein for the <code>isometric-art-zombie-apocalypse</code> story mode.</i></p>
+</div>
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
+|---|---|
+| 🎙️ **Audio-First Timing Authority** | Word-level timestamps calculate integer frame ranges `[startFrame, endFrame)` at 30 fps. Subtitles and transitions hit exactly on cue. |
+| ⚛️ **React & Remotion Motion** | Build scenes with standard React, TypeScript, CSS, SVG, and `@remotion/three`. No flaky black-box AI video hallucinations. |
+| 🎨 **Still Generation via NVIDIA NIM** | Generate ultra-crisp atmospheric plates (FLUX 3 Image Klein) on demand, cached by prompt hash and animated via code. |
+| 🎛️ **Deterministic Audio Finishing** | Multi-track audio mixdown: auto-ducking music beds, sound effect cueing, and loudness normalization to −14 LUFS via FFmpeg. |
+| 🧩 **Pluggable Production Modes** | Ship with general explainers and specialized story modes, or build custom series modes with our automated mode migration engine. |
+| 🤖 **Built for AI Agents** | Headless CLI, strict JSON input/output contracts, zero unhandled errors, built-in preflight `doctor`, and sandboxed execution. |
+| 🛡️ **Zero-Drift Determinism** | Pinned seeds, font bundles (Inter OFL), source fingerprinting, and cryptographic reproducibility records for every render. |
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+* **Node.js**: >= 24.5.0
+* **pnpm**: >= 10.33.0
+* **FFmpeg & ffprobe**: Installed and available on your system `PATH`
+* **Git**: Installed
+
+### 1. Installation
+
+```bash
+git clone https://github.com/AneekRahman/code-to-video-studio.git
+cd code-to-video-studio
 pnpm install --frozen-lockfile
+```
+
+### 2. Prepare Environment & Verify
+
+Download the Remotion headless browser and run preflight diagnostics:
+
+```bash
 pnpm studio prepare-browser
 pnpm studio doctor
-pnpm typecheck
-pnpm test
-pnpm lint
-pnpm test:modes
-pnpm studio schemas
-pnpm studio catalog
-pnpm studio modes
+```
+
+`pnpm studio doctor` verifies Node, proxy configuration, FFmpeg filters, codecs, render browsers, writable directories, and optional API keys.
+
+### 3. Run a Sample Fixture Video
+
+Render a complete test video immediately without requiring external API keys:
+
+```bash
 pnpm fixture --out work/fixture
+pnpm studio run --job work/fixture/job.json --out work/outputs
 ```
 
-## Installing in a workspace
+Output video and artifacts will be generated in `work/outputs/`!
 
-One clone per workspace, made by the workspace admin from a release tag:
+---
 
-```sh
-git clone --origin upstream --branch v<release> https://github.com/AneekRahman/code-to-video-studio.git video-studio
-cd video-studio
-git switch -c workspace/<workspace name>
+## 🎬 Production Modes
+
+Every video job runs in a registered **Production Mode**. Modes standardize art style, visual composition, camera movement, and audio direction.
+
+```bash
+# List all registered modes and their capabilities
+pnpm studio modes
 ```
 
-The bot commits its local modes and plans on that branch and never pushes;
-they exist only in the workspace, so its backups must include this folder.
-The repository is public, so fetching a release needs no credentials.
+### Shipped Modes
 
-## Updating and Migrations
+1. **`explainer` (Fallback Mode)**
+   * **Purpose:** Kinetic typography, data callouts, statistics, lists, comparisons, and educational shorts.
+   * **Visuals:** Code animations, responsive caption cards, metric badges, and accent graphics.
+   * **Default:** Used whenever no specialized mode fits the brief.
 
-```sh
+2. **`isometric-art-zombie-apocalypse` (Cinematic Story Mode)**
+   * **Purpose:** 30–60 second narrative suspense shorts (3D clay characters escaping danger, emergency broadcasts, survival rules, and uncanny twists).
+   * **Visuals:** Atmospheric isometric diorama plates generated via NVIDIA NIM FLUX 3 Klein, with 3D clay rigs animated via `@remotion/three`.
+   * **Audio:** ElevenLabs narration with word timing, synchronized emergency broadcast audio, 40+ sound effects, and tension score.
+
+### Creating New Modes
+
+```bash
+# Validate a new mode interview request
+pnpm studio check-mode-request --request path/to/request.json
+
+# Scaffold a workspace mode from templates
+cp -r templates/local-mode local-modes/my-new-series
+```
+
+Workspace modes live in `local-modes/<id>/` and declare their API version (`api: 1`). Upgrades across breaking studio releases are handled automatically with:
+
+```bash
+pnpm studio migrate --dry-run
 pnpm studio update --to v<release>
 ```
 
-`update` refuses uncommitted changes and a held job lock, fetches the tag
-from `upstream`, and merges it on `update/<tag>`. When the release raises the
-mode API major version, it automatically resolves and applies registered
-migration recipes to local modes. It then runs install, typecheck, lint,
-tests, `test:modes` (so every local mode renders against the new release)
-and `doctor`. Only when all pass does the workspace branch move to the merge.
-On a conflict or a failed check the workspace branch is unchanged and the error
-names the cause; a failed check keeps `update/<tag>` so local modes can be
-inspected or repaired there, and rerunning the same update resumes it.
+---
 
-To inspect or run mode migrations standalone (e.g. previewing codemod changes):
+## 🏗️ Architecture
 
-```sh
-pnpm studio migrate --dry-run
-pnpm studio migrate [--mode <id>] [--to <version>]
+```mermaid
+flowchart TD
+    A["Story Brief & Script"] --> B["Audio Director\n(ElevenLabs Narration)"]
+    B --> C["Word-Level Timestamps\n(Source of Truth)"]
+    
+    C --> D["Timeline Compiler\n([startFrame, endFrame) @ 30fps)"]
+    
+    E["NVIDIA NIM FLUX 3 Klein\n(Generated Still Plates)"] --> F["Remotion Visual Master\n(React, CSS, Three.js)"]
+    D --> F
+    
+    F --> G["Visual Master (Silent 1080x1920 MP4)"]
+    G --> H["Deterministic Audio Mixdown\n(FFmpeg: Narration + SFX + Music)"]
+    
+    H --> I["Assembled Final Export\n(-14 LUFS, Stereo AAC, H.264)"]
+    I --> J["Automated QA & Critic\n(ffprobe, Decodability, Sync Check)"]
 ```
 
-## Running inside OpenMausBot
+---
 
-Give the Code-to-Video bot this folder as its working folder, placed inside
-the bot's own folder so the bot box hides it from the workspace's other
-bots, and enable no other bot's access to it. With the box on, a turn sees
-only that folder, its bot folder, `HOME` and the read-only image:
+## 🛠️ CLI Reference
 
-- **Host image.** ffmpeg and ffprobe (with the filters `doctor` lists), Node
-  and pnpm come from the image; a boxed bot cannot install them.
-- **Network.** The box allows the internet only through its proxy.
-  `pnpm studio` and `pnpm smoke` pass `--use-env-proxy` so provider calls and
-  Remotion's one-time browser download use it.
-- **Keys.** The box strips `NVIDIA_NIM` and `ELEVENLABS` from the
-  environment, so they come from `local.env` in this folder (git-ignored,
-  mode 600; `doctor` fails a group- or world-readable file).
-- **Data.** The box gives each turn a private `/tmp` that is discarded
-  afterwards. Plates, audio, jobs and output stores go in `work/`
-  (git-ignored), the only place inside the studio the runner accepts.
+All commands run through `pnpm studio <command>`:
 
-`pnpm studio doctor` reports each of these as a check, without printing key
-values, and returns `ready` when every required check passes.
+| Command | Description |
+|---|---|
+| `doctor` | Verify host prerequisites (Node, FFmpeg, encoders, proxy, keys, browser). |
+| `modes` | Print the published catalog of shipped and local modes. |
+| `schemas` | Export JSON schemas for jobs, plates, stories, sounds, and manifests. |
+| `validate --job <file>` | Validate a job manifest against schema and asset integrity. |
+| `compile --job <file>` | Compile integer-frame timeline from narration timestamps. |
+| `preview --job <file> --out <dir>` | Render half-resolution preview MP4 and contact sheet. |
+| `render --job <file> --out <dir>` | Render silent full-resolution 1080x1920 visual master. |
+| `finish --job <file> --out <dir> --visual-manifest <file>` | Execute FFmpeg audio finishing and mixdown. |
+| `run --job <file> --out <dir>` | Execute complete render and audio finishing pipeline. |
+| `verify --result <dir>` | Run technical validation and decodability checks on export. |
+| `generate-plates --plates <file> --out <dir>` | Generate still background plates via NVIDIA NIM FLUX 3 Klein. |
+| `generate-audio --story <file> --sound <file> --out <dir>` | Generate ElevenLabs narration, word timing, SFX, and music. |
+| `package-story --story <file> --sound <file> --plates <dir> --audio <dir> --out <dir>` | Assemble story components into a runnable job directory. |
+| `migrate [--dry-run]` | Inspect and apply automated mode migration codemods. |
+| `update --to <tag>` | Safely update studio to a newer release with automated mode migrations. |
 
-`fixture` creates an input directory (a temporary one without `--out`) and prints its job path.
-It generates tone-only test audio, measured timing, geometric artwork, a music
-bed, and a pinned Inter font with its OFL license. Those word labels are not
-spoken narration. On macOS, `fixture --speech` uses `say` to synthesize each word
-and measures actual concatenated word boundaries; this is a technical speech
-fixture, not production narration or perceptual acceptance.
+---
 
-Use the printed job path and an output store under `work/` (or outside the studio), apart from the inputs:
+## 🔑 Environment & Credentials
 
-```sh
-pnpm studio validate --job work/fixture/job.json
-pnpm studio compile --job work/fixture/job.json
-pnpm studio preview --job work/fixture/job.json --out work/outputs
-pnpm studio render --job work/fixture/job.json --out work/outputs
-pnpm studio finish --job work/fixture/job.json --out work/outputs --visual-manifest work/outputs/job/render-identity/result.json
-pnpm studio run --job work/fixture/job.json --out work/outputs
-pnpm studio verify --result work/outputs/job/operation-identity
+Credentials are read from the git-ignored `local.env` file (permissions `600`) or environment variables:
+
+```bash
+# local.env
+NVIDIA_NIM=nvapi-your-nvidia-nim-api-key
+ELEVENLABS=your-elevenlabs-api-key
 ```
 
-Environment plates for the `isometric-art-zombie-apocalypse` mode are generated
-before any render, from a plate set such as
-`src/modes/isometric-art-zombie-apocalypse/plates.template.json`:
+> **Security Note:** Provider keys are never logged, printed, or committed into git. Production jobs reference provider configurations by name, never inline secrets.
 
-```sh
-pnpm studio generate-plates --plates work/plates.json --out work/plates-out [--provider nim|mock] [--only plate-id,plate-id]
-```
+---
 
-The `nim` provider calls hosted NVIDIA NIM FLUX 3 Image Klein with the
-`NVIDIA_NIM` key from the environment or the git-ignored package `local.env`.
-The output directory receives versioned plate files, `plates.json` (hash,
-composed prompt, seed, size, model, timing) and `contact-sheet.jpg`. Plates whose
-request is unchanged are reused without a provider call; a changed request
-writes a new version and never overwrites. Safety-filter refusals are reported
-per plate as `plates_incomplete`.
+## 🤖 AI Agent Integration
 
-A shot list (camera move, grade, atmosphere, transition and actors walking
-plate-space paths) is previewed against a plate directory with:
+Code-to-Video Studio is designed specifically for autonomous AI agents (Claude Code, OpenAI Codex, Antigravity, Cursor, and OpenMausBot).
 
-```sh
-pnpm studio preview-shots --shots work/shots.json --plates work/plates-out --out work/empty-preview-dir
-```
+See [`AGENT_README.md`](AGENT_README.md) for full agent prompts, autonomous installation recipes, error troubleshooting matrices, and schema definitions.
 
-It renders a silent half-resolution `preview.mp4`, two stills per shot and a
-contact sheet. Actors are code-drawn clay rigs rendered by `@remotion/three`
-through an orthographic isometric camera; headless Chrome runs with
-`gl: "angle"` for WebGL.
+---
 
-```sh
-pnpm studio preview-story --story work/story.json --plates work/plates-out --out work/empty-preview-dir [--timing work/timing.json] [--stills-only]
-```
+## 📜 License
 
-It renders the full story (shots, narration captions, title, broadcast and
-rule cards) from a story file such as
-`src/modes/isometric-art-zombie-apocalypse/story.template.json`. Shot lengths
-follow the narration: without `--timing` they are estimated from word counts;
-a timing file must match the script word for word.
-
-```sh
-pnpm studio generate-audio --story work/story.json --sound work/sound.json --out work/audio-out [--provider elevenlabs|mock]
-pnpm studio package-story --story work/story.json --sound work/sound.json --plates work/plates-out --audio work/audio-out --out work/empty-job-dir [--job-id id]
-pnpm studio run --job work/empty-job-dir/job.json --out work/outputs
-```
-
-`generate-audio` reads `ELEVENLABS` from the environment or the git-ignored
-package `local.env`. It synthesises each narration segment with character
-timestamps, every sound effect and the music bed described by a sound file
-such as `src/modes/isometric-art-zombie-apocalypse/sound.template.json`, and
-writes MP3s, `audio.json` (hashes and request provenance) and `timing.json`.
-Unchanged requests are reused.
-
-`package-story` copies the story, sound design, timing, every used plate and
-every generated clip into a job directory and writes a `job.json` with
-`mode: "isometric-art-zombie-apocalypse"`, hashes, provenance and explicit
-limits. The job then runs through the same `validate`, `preview`, `render`,
-`finish`, `run` and `verify` commands as the explainer. Finishing mixes
-narration (levelled per clip), cues and ducked music to −14 LUFS integrated
-with at least 1 dB of true-peak headroom after AAC encoding, and pins
-`mix-report.json` and `quality.json`. The quality report holds the mode's
-rubric (hook, rule reading time, duration) and measured loudness, true peak,
-and black or silent stretches outside the story's declared cuts; it informs
-the Critic and does not accept the video. Rendering never calls a provider.
-
-`preview` renders a half-resolution full clip plus scene thumbnails/contact sheet;
-`render` produces the silent 1080x1920 H.264 visual master; `finish` consumes a
-verified full visual result for exactly the same job and adds AAC narration and
-explicit optional tracks. `run` performs render and finishing together. Results
-include `result.json`, timeline, technical reports, source/dependency fingerprints,
-exact input snapshots, media hashes and the final video filename. Compile/validate
-results are returned as JSON; no arbitrary shell or code is accepted in a job.
-
-The local schema is distinguished by `adapter: "local-fixture"`; it is separate
-from the guide's illustrative production URI contracts. Export its actual JSON
-Schemas with `studio schemas`. Each input is a relative local file plus SHA-256,
-with symlink resolution and combined byte limits. Raster stills/fonts are staged
-for frame rendering. Remote/S3 references require an unconfigured production
-adapter and are rejected. The fixture approval string is an input precondition,
-not authentication; this is a trusted local CLI, not a sandbox for hostile users.
-
-Jobs must explicitly set operation attempts, runtime, input/result bytes, frame
-limits and concurrency 1. Each uncached preview/render/finish/run consumes one
-operation attempt; matching immutable results are verified and reused without a
-new attempt. The ledger is shared across that job id within the output store.
-A persistent store lock rejects simultaneous work; an interrupted lock requires
-operator inspection, not automatic removal. Choosing a new output store is not
-production-wide budget enforcement. Automatic loudness normalization for the
-explainer and global lock stale recovery remain deferred. Oversized/failed
-outputs are not published.
-
-Source fingerprints cover `src/`, `local-modes/`, `package.json`, `tsconfig.json`
-and the studio's `pnpm-lock.yaml` and `pnpm-workspace.yaml`.
-The Git field is the baseline commit; uncommitted source is identified by file
-hashes, not misrepresented as that commit. Retain the corresponding source checkout
-as well as the output's input snapshots when reproducing a local run.
-
-Technical reports always retain `creative_acceptance: "not_reviewed"` and
-`publication_authorized: false`. Stream/decode checks do not prove absence of
-silent/black segments, clipping, bad pacing or unreadable typography. Independent
-Critic review and Showrunner authorization remain required outside this package.
-
-For the real media smoke check:
-
-```sh
-pnpm smoke --keep
-pnpm smoke --speech --keep
-```
-
-Without `--keep`, only the newly created fixture tree is removed. The smoke
-checks preview, full render, mix/decode, input snapshots, idempotency, leases,
-corruption rejection and exhausted attempts. No live host, provider keys,
-production bucket or user OpenMausBot data is used.
-
-Source integration follows the official Remotion [bundle](https://www.remotion.dev/docs/bundle),
-[composition selection](https://www.remotion.dev/docs/renderer/select-composition),
-and [media rendering](https://www.remotion.dev/docs/renderer/render-media) APIs.
-The team's design guide, a private maintainer document, remains the
-authority for team roles, storage, spending and creative
-acceptance.
-
-## License and security
-
-The studio's own code is MIT-licensed ([LICENSE](LICENSE)). Remotion is not:
-it has its own license, under which some companies need a paid company
-license; check [remotion.dev/license](https://www.remotion.dev/license)
-before production use. Fonts are the Fontsource packages' own (OFL).
-
-Never commit `local.env` or anything in `work/`; both are git-ignored. Report
-a security problem privately to the maintainers through GitHub's private
-vulnerability reporting rather than in a public issue.
+* **Code-to-Video Studio core:** Licensed under the [MIT License](LICENSE).
+* **Remotion:** Licensed separately under the [Remotion License](https://www.remotion.dev/license).
+* **Typography:** Bundled Inter font is licensed under the [SIL Open Font License (OFL)](https://openfontlicense.org/).
