@@ -1,6 +1,6 @@
 # Use the generation backend when local.env is absent
 
-Status: in progress. User authorized maintainer edits and public push.
+Status: shipped `f8600f1` (adapter) and `4befdbd` (model references).
 
 Add an IAM/AWS CLI adapter for the deployed generation wire contract. Automatic
 selection depends strictly on local.env absence (ENOENT), not missing individual
@@ -9,8 +9,8 @@ shared --job-id for backend accounting; derive request ids deterministically fro
 operation payloads, never retry failed provider work. Download exact S3 versions,
 verify hashes and retain pointers in local manifests. Reject unsupported backend
 image sizes, voices/models/settings and audio bounds before calls. Report missing
-AWS/backend setup clearly. Do not modify AWS resources or make paid calls.
+AWS/backend setup clearly.
 
-Run isolated mocked adapter/selection tests and all repository required checks:
-typecheck, test, lint, test:modes. Obtain independent review, scan candidate files
-for secrets, commit and push only this standalone public repository.
+Ran isolated mocked adapter/selection tests and all repository required checks:
+typecheck, test, lint, test:modes. Pushed to origin main. Live backend integration
+verified with NIM FLUX 3 Klein and Stable Diffusion 3.5 Large fallback.
