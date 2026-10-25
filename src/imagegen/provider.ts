@@ -1,3 +1,4 @@
+import type {SourceArtifact} from '../generation-source.ts';
 export type ImageRequest = {
   prompt: string;
   width: number;
@@ -7,6 +8,7 @@ export type ImageRequest = {
 
 export type GeneratedImage = {
   bytes: Buffer;
+  source_artifacts?: SourceArtifact[];
   format: 'jpeg' | 'png';
   seed: number;
   provider_request_ms: number;

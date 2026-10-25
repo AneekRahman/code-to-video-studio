@@ -1,3 +1,4 @@
+import {createBackendProviders, localEnvExists} from './generation-backend.ts';
 import {parseArgs} from 'node:util';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
@@ -85,10 +86,11 @@ async function main() {
   }
   requireNoCollisions();
   if (command === 'generate-plates') {
-    requireCondition(values.plates && values.out, 'USAGE', 'generate-plates requires --plates <plates.json> --out <directory under work/> [--provider nim|mock] [--only id,id]');
-    requireCondition(!values.provider || values.provider === 'nim' || values.provider === 'mock', 'USAGE', 'Supported image providers: nim, mock');
-    const provider = values.provider === 'mock' ? createMockImageProvider() : createNimFluxProvider(await resolveSecret('NVIDIA_NIM'));
-    return generatePlates({plates: values.plates, out: values.out, provider, only: values.only?.split(',').filter(Boolean)});
+    requireCondition(values.plates && values.out, 'USAGE', 'generate-plates requires --plates <plates.json> --out <directory under work/> [--provider nim|backend|mock] [--only id,id]');
+    requireCondition(!values.provider || values.provider === 'nim' || values.provider === 'backend' || values.provider === 'mock', 'USAGE', 'Supported image providers: nim, backend, mock');
+    const backend = values.provider === 'backend' || (!values.provider && !await localEnvExists());
+    const provider = backend ? createBackendProviders(values['job-id'] ?? '').image : values.provider === 'mock' ? createMockImageProvider() : createNimFluxProvider(await resolveSecret('NVIDIA_NIM'));
+    return generatePlates({plates: values.plates, out: values.out, provider, timeoutMs: backend ? 300_000 : undefined, only: values.only?.split(',').filter(Boolean)});
   }
   if (command === 'preview-shots') {
     requireCondition(values.shots && values.plates && values.out, 'USAGE', 'preview-shots requires --shots <shots.json> --plates <plates directory> --out <empty directory under work/>');
@@ -99,9 +101,10 @@ async function main() {
     return previewStory({story: values.story, plates: values.plates, timing: values.timing, out: values.out, stillsOnly: values['stills-only']});
   }
   if (command === 'generate-audio') {
-    requireCondition(values.story && values.sound && values.out, 'USAGE', 'generate-audio requires --story <story.json> --sound <sound.json> --out <directory under work/> [--provider elevenlabs|mock]');
-    requireCondition(!values.provider || values.provider === 'elevenlabs' || values.provider === 'mock', 'USAGE', 'Supported audio providers: elevenlabs, mock');
-    const provider = values.provider === 'mock' ? createMockAudioProvider() : createElevenLabsProvider(await resolveSecret('ELEVENLABS'));
+    requireCondition(values.story && values.sound && values.out, 'USAGE', 'generate-audio requires --story <story.json> --sound <sound.json> --out <directory under work/> [--provider elevenlabs|backend|mock]');
+    requireCondition(!values.provider || values.provider === 'elevenlabs' || values.provider === 'backend' || values.provider === 'mock', 'USAGE', 'Supported audio providers: elevenlabs, backend, mock');
+    const backend = values.provider === 'backend' || (!values.provider && !await localEnvExists());
+    const provider = backend ? createBackendProviders(values['job-id'] ?? '').audio : values.provider === 'mock' ? createMockAudioProvider() : createElevenLabsProvider(await resolveSecret('ELEVENLABS'));
     return generateAudio({story: values.story, sound: values.sound, out: values.out, provider});
   }
   if (command === 'package-story') {

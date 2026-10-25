@@ -1,3 +1,4 @@
+import {localEnvExists} from './generation-backend.ts';
 import {access, mkdir, readdir, realpath, rm, stat, writeFile} from 'node:fs/promises';
 import {hostname} from 'node:os';
 import {resolve} from 'node:path';
@@ -118,6 +119,7 @@ async function scratchCheck(root: string): Promise<DoctorCheck> {
 async function credentialChecks(root: string): Promise<DoctorCheck[]> {
   const envFile = resolve(root, 'local.env');
   const checks: DoctorCheck[] = [];
+  if (!await localEnvExists(root)) checks.push({check_id: 'generation_backend', pass: false, required: false, detail: 'No local.env: generation selects openmausbot-generation-v1-generate; AWS CLI, scoped credentials, --job-id and provider setup required; not verified by doctor'});
   for (const name of providerKeys) {
     const configured = await resolveSecret(name, envFile).then(() => true, () => false);
     checks.push({check_id: `key_${name}`, pass: configured, required: false, detail: configured ? 'configured' : 'not configured; needed only for generate-* with the real provider'});

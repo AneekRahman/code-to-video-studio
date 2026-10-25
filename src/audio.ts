@@ -10,6 +10,7 @@ import {SoundSchema, alignmentWords} from './modes/isometric-art-zombie-apocalyp
 export type AudioAssetKind = 'speech' | 'effect' | 'music';
 
 export type AudioRecord = {
+  source_artifacts?: import('./generation-source.ts').SourceArtifact[];
   asset_id: string;
   kind: AudioAssetKind;
   file: string;
@@ -82,16 +83,17 @@ export async function generateAudio(options: {story: string; sound: string; out:
     let bytes: Buffer;
     let alignment: CharacterAlignment | undefined;
     let requestMs: number;
+    let sourceArtifacts: import('./generation-source.ts').SourceArtifact[] | undefined;
     try {
       if (asset.kind === 'speech') {
         const r = asset.request as {voice_id: string; model: string; text: string; seed: number; settings?: Record<string, number | boolean>};
         const speech = await options.provider.speak(r, signal);
         alignmentWords(r.text, speech.alignment);
-        ({bytes, alignment, provider_request_ms: requestMs} = speech);
+        ({bytes, alignment, provider_request_ms: requestMs, source_artifacts: sourceArtifacts} = speech);
       } else if (asset.kind === 'effect') {
-        ({bytes, provider_request_ms: requestMs} = await options.provider.effect(asset.request as {prompt: string; duration_seconds: number; prompt_influence: number; loop: boolean}, signal));
+        ({bytes, provider_request_ms: requestMs, source_artifacts: sourceArtifacts} = await options.provider.effect(asset.request as {prompt: string; duration_seconds: number; prompt_influence: number; loop: boolean}, signal));
       } else {
-        ({bytes, provider_request_ms: requestMs} = await options.provider.music(asset.request as {prompt: string; duration_seconds: number}, signal));
+        ({bytes, provider_request_ms: requestMs, source_artifacts: sourceArtifacts} = await options.provider.music(asset.request as {prompt: string; duration_seconds: number}, signal));
       }
     } catch (error) {
       if (!(error instanceof StudioError) || error.code !== 'PROVIDER_REFUSED') throw error;
@@ -102,6 +104,7 @@ export async function generateAudio(options: {story: string; sound: string; out:
     const file = `${asset.asset_id}-v${version}.mp3`;
     await writeFile(resolve(out, file), bytes, {flag: 'wx', mode: 0o600});
     records.set(asset.asset_id, {
+      source_artifacts: sourceArtifacts,
       asset_id: asset.asset_id,
       kind: asset.kind,
       file,

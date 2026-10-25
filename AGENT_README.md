@@ -48,7 +48,7 @@ pnpm install --frozen-lockfile
 # 4. Download and prepare the Remotion headless browser
 pnpm studio prepare-browser
 
-# 5. Configure credentials in local.env (mode 600 required)
+# 5. Optional direct-provider mode: configure local.env (mode 600 required)
 cat << 'EOF' > local.env
 NVIDIA_NIM=nvapi-your-key-here
 ELEVENLABS=your-elevenlabs-key-here
@@ -58,6 +58,10 @@ chmod 600 local.env
 # 6. Execute preflight validation
 pnpm studio doctor
 ```
+
+If `local.env` is absent, generation selects the AWS backend instead; configure
+scoped AWS authentication and compatible inputs as described in
+[backend setup](docs/generation-backend.md). `doctor` does not verify AWS readiness.
 
 Verify that `pnpm studio doctor` outputs:
 ```json

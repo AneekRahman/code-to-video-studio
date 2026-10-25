@@ -7,6 +7,7 @@ import type {ImageProvider} from './imagegen/provider.ts';
 import {PlateSetSchema, composePlatePrompt, type Plate} from './modes/isometric-art-zombie-apocalypse/style.ts';
 
 export type PlateRecord = {
+  source_artifacts?: import('./generation-source.ts').SourceArtifact[];
   plate_id: string;
   file: string;
   sha256: string;
@@ -84,6 +85,7 @@ export async function generatePlates(options: {plates: string; out: string; prov
     const file = `${plate.plate_id}-v${version}.${image.format === 'jpeg' ? 'jpg' : 'png'}`;
     await writeFile(resolve(out, file), image.bytes, {flag: 'wx', mode: 0o600});
     records.set(plate.plate_id, {
+      source_artifacts: image.source_artifacts,
       plate_id: plate.plate_id,
       file,
       sha256: sha256(image.bytes),

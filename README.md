@@ -188,7 +188,12 @@ All commands run through `pnpm studio <command>`:
 
 ## 🔑 Environment & Credentials
 
-Credentials are read from the git-ignored `local.env` file (permissions `600`) or environment variables:
+Without `local.env`, generation automatically uses the IAM-authenticated
+`openmausbot-generation-v1-generate` backend; AWS CLI, scoped AWS credentials
+and `--job-id` are required. See [backend setup and supported inputs](docs/generation-backend.md).
+An existing file keeps the local-provider path.
+
+For local generation, credentials are read from the git-ignored `local.env` file (permissions `600`) or environment variables:
 
 ```bash
 # local.env

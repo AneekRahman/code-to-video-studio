@@ -44,8 +44,11 @@ maintainer file conflicts with every later release.
 - Job data (plates, audio, packaged jobs, output stores, previews) goes in
   `work/`: persistent. Never `/tmp`, which the bot box discards after each
   turn, and nowhere else in the tree; the runner refuses other paths.
-- Provider keys come only from `local.env` (mode 600). The bot box strips
-  them from the environment. Never print, log or copy a key, or put one in a
+- Without `local.env`, generation selects the configured AWS backend; follow
+  [backend setup](docs/generation-backend.md), supply a shared `--job-id`, and use
+  scoped AWS credentials. Existing `local.env` keeps the local provider path.
+  Provider keys in that file require mode 600. The bot box strips them from the
+  environment. Never print, log or copy a key, or put one in a
   job, brief, report or commit.
 - Never write outside this folder. The team's design guide belongs to its
   maintainers.

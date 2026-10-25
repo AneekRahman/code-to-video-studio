@@ -1,3 +1,4 @@
+import type {SourceArtifact} from '../generation-source.ts';
 export type SpeechRequest = {
   voice_id: string;
   model: string;
@@ -9,13 +10,13 @@ export type SpeechRequest = {
 /** Per-character timing of the synthesised clip; `characters` joined equals the request text. */
 export type CharacterAlignment = {characters: string[]; starts: number[]; ends: number[]};
 
-export type GeneratedSpeech = {bytes: Buffer; alignment: CharacterAlignment; provider_request_ms: number};
+export type GeneratedSpeech = {source_artifacts?: SourceArtifact[]; bytes: Buffer; alignment: CharacterAlignment; provider_request_ms: number};
 
 export type EffectRequest = {prompt: string; duration_seconds: number; prompt_influence: number; loop: boolean};
 
 export type MusicRequest = {prompt: string; duration_seconds: number};
 
-export type GeneratedAudio = {bytes: Buffer; provider_request_ms: number};
+export type GeneratedAudio = {source_artifacts?: SourceArtifact[]; bytes: Buffer; provider_request_ms: number};
 
 /** A speech, sound-effect and music backend returning MP3 bytes. Implementations must never log or return credentials. */
 export interface AudioProvider {
