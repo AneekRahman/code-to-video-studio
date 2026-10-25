@@ -157,7 +157,7 @@ flowchart TD
     G --> H["Deterministic Audio Mixdown\n(FFmpeg: Narration + SFX + Music)"]
     
     H --> I["Assembled Final Export\n(-14 LUFS, Stereo AAC, H.264)"]
-    I --> J["Automated QA & Critic\n(ffprobe, Decodability, Sync Check)"]
+    I --> J["Automated QA & Technical Checks\n(ffprobe, Decodability, Loudness, Sync)"]
 ```
 
 ---
@@ -178,9 +178,10 @@ All commands run through `pnpm studio <command>`:
 | `finish --job <file> --out <dir> --visual-manifest <file>` | Execute FFmpeg audio finishing and mixdown. |
 | `run --job <file> --out <dir>` | Execute complete render and audio finishing pipeline. |
 | `verify --result <dir>` | Run technical validation and decodability checks on export. |
-| `generate-plates --plates <file> --out <dir>` | Generate still background plates via NVIDIA NIM FLUX 3 Klein. |
-| `generate-audio --story <file> --sound <file> --out <dir>` | Generate ElevenLabs narration, word timing, SFX, and music. |
+| `generate-plates --plates <file> --out <dir>` | Generate still background plates via NVIDIA NIM FLUX 3 Klein (or deployed AWS backend when `local.env` is absent). |
+| `generate-audio --story <file> --sound <file> --out <dir>` | Generate ElevenLabs narration, word timing, SFX, and music (or deployed AWS backend when `local.env` is absent). |
 | `package-story --story <file> --sound <file> --plates <dir> --audio <dir> --out <dir>` | Assemble story components into a runnable job directory. |
+| `prune [--older-than <hours>] [--dry-run]` | Inspect and opportunistically prune scratch directories under `work/`. |
 | `migrate [--dry-run]` | Inspect and apply automated mode migration codemods. |
 | `update --to <tag>` | Safely update studio to a newer release with automated mode migrations. |
 
