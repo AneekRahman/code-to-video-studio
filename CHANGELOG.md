@@ -8,6 +8,10 @@ until each local mode has been migrated and passes `pnpm test:modes`.
 
 ## [Unreleased]
 
+- Opportunistic scratch disk auto-pruning: `src/prune.ts` purges scratch directories and job outputs in `work/` older than 48 hours.
+- Runner preflight cleanup: `executeJob` runs silent opportunistic cleanup before allocating scratch directories for new jobs.
+- CLI prune command: `pnpm studio prune [--older-than <hours>] [--out <work directory>] [--dry-run]` to inspect and prune disk space on demand.
+- Doctor scratch retention check: `doctor` inspects scratch disk and reports eligible prune candidates.
 - Automated mode migration system: `pnpm studio migrate [--mode <id>] [--to <version>] [--dry-run]` to inspect and execute mode codemod recipes.
 - Update pipeline auto-migration: `pnpm studio update --to <tag>` automatically checks local mode API versions on `update/<tag>` and runs registered migration recipes before running release conformance checks.
 - Migration recipe engine in `src/migrations/` with multi-hop version resolution and built-in recipes (`v0-to-v1` and `v1-to-v2`).

@@ -6,6 +6,7 @@ import {resolveSecret} from './imagegen/credentials.ts';
 import {runToolCapture} from './process.ts';
 import {packageRoot} from './render.ts';
 import {registry, type Registry} from './modes/registry.ts';
+import {pruneScratch} from './prune.ts';
 
 export type DoctorCheck = {check_id: string; pass: boolean; required: boolean; detail: string};
 
@@ -96,6 +97,24 @@ async function workCheck(root: string): Promise<DoctorCheck> {
   }
 }
 
+async function scratchCheck(root: string): Promise<DoctorCheck> {
+  const work = resolve(root, 'work');
+  try {
+    const report = await pruneScratch({workDir: work, maxAgeMs: 48 * 3600 * 1000, dryRun: true});
+    const bytesMb = (report.pruned_bytes / (1024 * 1024)).toFixed(1);
+    return {
+      check_id: 'scratch_retention',
+      pass: true,
+      required: false,
+      detail: report.candidates.length
+        ? `${report.candidates.length} scratch folders older than 48h (${bytesMb} MB) eligible for pruning`
+        : 'scratch disk clean; no directories older than 48h',
+    };
+  } catch {
+    return {check_id: 'scratch_retention', pass: true, required: false, detail: 'unable to inspect scratch disk'};
+  }
+}
+
 async function credentialChecks(root: string): Promise<DoctorCheck[]> {
   const envFile = resolve(root, 'local.env');
   const checks: DoctorCheck[] = [];
@@ -128,6 +147,7 @@ export async function doctor(root = packageRoot, current: Registry = registry) {
     await dependencyCheck(canonical),
     await browserCheck(canonical),
     await workCheck(canonical),
+    await scratchCheck(canonical),
     ...await credentialChecks(canonical),
     ...modeChecks(current),
   ];

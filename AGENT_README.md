@@ -134,6 +134,14 @@ pnpm studio package-story --story work/story.json --sound work/sound.json --plat
 pnpm studio run --job work/story-job/job.json --out work/outputs
 ```
 
+### Pattern C: Scratch Disk Maintenance & Pruning
+```bash
+# Opportunistic pruning runs automatically on each `pnpm studio run` preflight.
+# To manually inspect or prune scratch files older than 48 hours:
+pnpm studio prune --older-than 48 --dry-run
+pnpm studio prune --older-than 48
+```
+
 ---
 
 ## 6. How to Build a New Local Mode

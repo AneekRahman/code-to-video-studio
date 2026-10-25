@@ -134,6 +134,9 @@ Workspace modes live in `local-modes/<id>/` and declare their API version (`api:
 ```bash
 pnpm studio migrate --dry-run
 pnpm studio update --to v<release>
+
+# Inspect and prune scratch files older than 48h
+pnpm studio prune --older-than 48
 ```
 
 ---

@@ -8,6 +8,7 @@ import {inspect} from './media.ts';
 import {packageRoot} from './render.ts';
 import {sourceProvenance} from './provenance.ts';
 import {runTool} from './process.ts';
+import {pruneScratch} from './prune.ts';
 
 const Artifact = z.strictObject({name: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_./-]+$/).refine(name => !name.split('/').some(part => part === '..' || part === '.' || part === '')), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: z.number().int().nonnegative()});
 export const ResultSchema = z.strictObject({schema_version: z.literal('1.0'), job_id: z.string(), input_hash: z.string(), source_hash: z.string(), operation: z.enum(['preview', 'render', 'finish', 'run']), status: z.literal('technical_complete'), creative_acceptance: z.literal('not_reviewed'), publication_authorized: z.literal(false), artifacts: z.array(Artifact), final_video: z.string(), created_at: z.string()});
@@ -71,6 +72,11 @@ export function overlapsSource(canonicalPackage: string, path: string): boolean 
 
 export async function executeJob(jobPath: string, out: string, operation: Operation, visualManifest?: string) {
   const started = Date.now();
+  try {
+    await pruneScratch({maxAgeMs: 48 * 3600 * 1000});
+  } catch {
+    // Best-effort opportunistic preflight cleanup must never fail a valid job
+  }
   const loaded = await loadAnyJob(jobPath, started);
   const deadline = started + loaded.job.limits.max_runtime_seconds * 1000;
   const canonicalPackage = await realpath(packageRoot);

@@ -23,6 +23,7 @@ import {updateStudio} from './update.ts';
 import {doctor} from './doctor.ts';
 import {ensureBrowser} from '@remotion/renderer';
 import {checkModeRequest} from './modes/request.ts';
+import {pruneScratch} from './prune.ts';
 
 function sanitizeIssues(issues: z.ZodIssue[]): {path: string; code: string}[] {
   return issues.map(issue => ({
@@ -47,9 +48,18 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}}});
   const command = positionals[0];
   if (command === 'doctor') return doctor();
+  if (command === 'prune') {
+    const olderThan = values['older-than'] ? Number(values['older-than']) : 48;
+    requireCondition(!Number.isNaN(olderThan) && olderThan >= 0, 'USAGE', 'prune takes [--older-than <hours>] [--out <work directory>] [--dry-run]');
+    return pruneScratch({
+      workDir: values.out,
+      maxAgeMs: olderThan * 3600 * 1000,
+      dryRun: values['dry-run'],
+    });
+  }
   if (command === 'update') {
     requireCondition(values.to, 'USAGE', 'update requires --to <release tag> [--remote <name, default upstream>] [--no-migrate]');
     return updateStudio({to: values.to, remote: values.remote, autoMigrate: !values['no-migrate']});
@@ -110,7 +120,7 @@ async function main() {
     requireCondition(values.result, 'USAGE', 'verify requires --result <output directory>');
     return {status: 'verified', result: await verifyArtifacts(values.result)};
   }
-  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; schemas; verify --result <directory>');
+  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; prune [--older-than <hours>] [--dry-run]; schemas; verify --result <directory>');
   if (command === 'validate' || command === 'compile') {
     const loaded = await loadAnyJob(values.job);
     return {status: 'validated', job_id: loaded.job.job_id, mode: loaded.mode, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};
