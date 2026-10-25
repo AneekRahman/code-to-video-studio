@@ -9,6 +9,8 @@ import {packageRoot} from './render.ts';
 import {sourceProvenance} from './provenance.ts';
 import {runTool} from './process.ts';
 import {pruneScratch} from './prune.ts';
+import {acquireJobLock} from './lock.ts';
+import {purgeCorruptDestination, resetAttempts} from './recovery-state.ts';
 
 const Artifact = z.strictObject({name: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_./-]+$/).refine(name => !name.split('/').some(part => part === '..' || part === '.' || part === '')), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: z.number().int().nonnegative()});
 export const ResultSchema = z.strictObject({schema_version: z.literal('1.0'), job_id: z.string(), input_hash: z.string(), source_hash: z.string(), operation: z.enum(['preview', 'render', 'finish', 'run']), status: z.literal('technical_complete'), creative_acceptance: z.literal('not_reviewed'), publication_authorized: z.literal(false), artifacts: z.array(Artifact), final_video: z.string(), created_at: z.string()});
@@ -70,7 +72,7 @@ export function overlapsSource(canonicalPackage: string, path: string): boolean 
   return isWithin(canonicalPackage, path) && !isWithin(resolve(canonicalPackage, 'work'), path);
 }
 
-export async function executeJob(jobPath: string, out: string, operation: Operation, visualManifest?: string) {
+export async function executeJob(jobPath: string, out: string, operation: Operation, visualManifest?: string, options: {fresh?: boolean} = {}) {
   const started = Date.now();
   try {
     await pruneScratch({maxAgeMs: 48 * 3600 * 1000});
@@ -105,8 +107,7 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
   const storeLstat = await lstat(store);
   requireCondition(!storeLstat.isSymbolicLink() && isWithin(root, canonicalStore), 'OUTPUT_SCOPE', 'Output job directory escapes its store');
   const lock = resolve(root, '.studio-lock');
-  try {await mkdir(lock, {mode: 0o700});}
-  catch (error) {if ((error as NodeJS.ErrnoException).code === 'EEXIST') throw new StudioError('JOB_LOCKED', 'Job already has an active or interrupted owner; inspect it before explicit recovery'); throw error;}
+  const jobLock = await acquireJobLock(lock);
   let stage: string | undefined;
   try {
     const source = await sourceProvenance();
@@ -123,12 +124,22 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
     }
     const identity = sha256(JSON.stringify({job_id: loaded.job.job_id, input: loaded.inputHash, source: source.source_sha256, operation, visual: base?.artifacts})).slice(0, 24);
     const destination = resolve(store, `${operation}-${identity}`);
+    const ledgerPath = resolve(store, 'attempts.json');
+    if (options.fresh) await resetAttempts(store);
     let destinationExists = false;
     try {
       await stat(destination);
       destinationExists = true;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+    if (options.fresh && destinationExists) {
+      await purgeCorruptDestination(destination, async () => {
+        const cached = await verifyArtifacts(destination);
+        requireCondition(cached.job_id === loaded.job.job_id && cached.input_hash === loaded.inputHash && cached.source_hash === source.source_sha256 && cached.operation === operation, 'OUTPUT_CHANGED', 'Cached result identity is invalid');
+      });
+      try { await stat(destination); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') destinationExists = false; else throw error; }
     }
     if (destinationExists) {
       let cached: z.infer<typeof ResultSchema>;
@@ -145,13 +156,12 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
       } catch (error) {
         throw new StudioError(
           'OUTPUT_CORRUPT',
-          'Existing output destination is partial, corrupt, or does not match its manifest; inspect or remove manually before rerun',
+          'Existing output destination is partial, corrupt, or does not match its manifest; use --fresh or studio clean to recover it',
           {cause: error instanceof Error && 'code' in error ? (error as {code: string}).code : 'UNVERIFIED'}
         );
       }
       return {manifest: resolve(destination, 'result.json'), cached: true, result: cached};
     }
-    const ledgerPath = resolve(store, 'attempts.json');
     let attempts = {count: 0};
     try {attempts = await readJson(ledgerPath, Attempts);}
     catch (error) {
@@ -228,6 +238,6 @@ export async function executeJob(jobPath: string, out: string, operation: Operat
     return {manifest: resolve(destination, 'result.json'), cached: false, result};
   } finally {
     if (stage) await rm(stage, {recursive: true, force: true});
-    await rm(lock, {recursive: true, force: true});
+    await jobLock.release();
   }
 }

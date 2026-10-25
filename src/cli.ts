@@ -1,5 +1,6 @@
 import {createBackendProviders, localEnvExists} from './generation-backend.ts';
 import {parseArgs} from 'node:util';
+import {resolve} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
@@ -27,6 +28,9 @@ import {checkModeRequest} from './modes/request.ts';
 import {pruneScratch} from './prune.ts';
 import {narrateExplainer} from './modes/explainer/narrate.ts';
 import {exportDiagnostics} from './diagnostics.ts';
+import {unlockJob} from './lock.ts';
+import {cleanStudioWork} from './recovery.ts';
+import {packageRoot} from './render.ts';
 
 function sanitizeIssues(issues: z.ZodIssue[]): {path: string; code: string}[] {
   return issues.map(issue => ({
@@ -51,8 +55,10 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, script: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}, voice: {type: 'string'}, seed: {type: 'string'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, script: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}, voice: {type: 'string'}, seed: {type: 'string'}, fresh: {type: 'boolean'}, force: {type: 'boolean'}, all: {type: 'boolean'}}});
   const command = positionals[0];
+  if (command === 'unlock') return unlockJob(resolve(values.out ?? resolve(packageRoot, 'work/outputs'), '.studio-lock'), values.force);
+  if (command === 'clean') return cleanStudioWork({jobId: values.job, all: values.all});
   if (command === 'doctor') return doctor();
   if (command === 'diagnostics') {
     return exportDiagnostics({jobId: values.job, out: values.out});
@@ -136,14 +142,14 @@ async function main() {
     requireCondition(values.result, 'USAGE', 'verify requires --result <output directory>');
     return {status: 'verified', result: await verifyArtifacts(values.result)};
   }
-  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>]; generate-plates; generate-audio; narrate-explainer; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; diagnostics; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; prune [--older-than <hours>] [--dry-run]; schemas; verify --result <directory>');
+  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>] [--fresh]; unlock [--out <store under work/>] [--force]; clean [--job <id> | --all]; generate-plates; generate-audio; narrate-explainer; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; diagnostics; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; prune [--older-than <hours>] [--dry-run]; schemas; verify --result <directory>');
   if (command === 'validate' || command === 'compile') {
     const loaded = await loadAnyJob(values.job);
     return {status: 'validated', job_id: loaded.job.job_id, mode: loaded.mode, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};
   }
   requireCondition(command === 'preview' || command === 'render' || command === 'finish' || command === 'run', 'USAGE', 'Unknown studio command');
   requireCondition(values.out, 'USAGE', 'Rendering commands require --out <output store under work/>');
-  return executeJob(values.job, values.out, command, values['visual-manifest']);
+  return executeJob(values.job, values.out, command, values['visual-manifest'], {fresh: values.fresh});
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
