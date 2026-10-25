@@ -6,8 +6,13 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
-## [Unreleased]
+## v1.1.0
 
+Mode API 1.0.
+
+- AWS Generation Backend Adapter: Automatic backend selection when `local.env` is absent, routing to deployed generation Lambda with immutable S3 artifact verification, deterministic job IDs, support for 9:16 (768×1344) vertical still plates, and expanded seeds.
+- Explainer self-narration: `narrate-explainer` command and `src/modes/explainer/narrate.ts` providing automated speech synthesis and word-level timestamp generation directly from script segments.
+- Studio diagnostics: `pnpm studio diagnostics [--job <id>] [--out <dir>]` exporting bounded, sanitized JSONL diagnostic support bundles with redaction of secrets, API keys, and personal paths.
 - Opportunistic scratch disk auto-pruning: `src/prune.ts` purges scratch directories and job outputs in `work/` older than 48 hours.
 - Runner preflight cleanup: `executeJob` runs silent opportunistic cleanup before allocating scratch directories for new jobs.
 - CLI prune command: `pnpm studio prune [--older-than <hours>] [--out <work directory>] [--dry-run]` to inspect and prune disk space on demand.

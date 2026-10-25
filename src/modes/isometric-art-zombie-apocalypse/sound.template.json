@@ -9,7 +9,7 @@
   },
   "effects": [
     {"effect_id": "knock", "prompt": "A single heavy knuckle knock on a solid wooden front door, heard from inside the house, dry and close", "duration_seconds": 0.6, "prompt_influence": 0.7},
-    {"effect_id": "wind", "prompt": "Cold empty night wind outside a suburban house, low and hollow, very distant dog bark, no music", "duration_seconds": 12, "prompt_influence": 0.5, "loop": true},
+    {"effect_id": "wind", "prompt": "Cold empty night wind outside a suburban house, low and hollow, very distant dog bark, no music", "duration_seconds": 10, "prompt_influence": 0.5, "loop": true},
     {"effect_id": "glitch", "prompt": "Short harsh analog video glitch, burst of digital static and a tape stop", "duration_seconds": 0.8, "prompt_influence": 0.6},
     {"effect_id": "store", "prompt": "Quiet grocery store ambience, fluorescent light hum, distant checkout scanner beeps, no music", "duration_seconds": 8, "prompt_influence": 0.5, "loop": true},
     {"effect_id": "scream", "prompt": "A distant terrified scream outdoors far away, echoing between buildings", "duration_seconds": 2.5, "prompt_influence": 0.6},
@@ -31,7 +31,7 @@
   ],
   "music": {
     "prompt": "Dark ambient horror drone score for a short film. Slow evolving low synth pads, cold metallic textures, distant detuned piano notes, sparse deep sub pulses like a slow heartbeat. No drums, no vocals, no melody. Tense, minimal, cinematic.",
-    "duration_seconds": 60,
+    "duration_seconds": 30,
     "gain_db": -9,
     "fade_in_seconds": 1.5,
     "fade_out_seconds": 0.3,

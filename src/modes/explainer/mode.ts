@@ -28,7 +28,7 @@ export const explainerMode = defineMode<LoadedExplainerJob>({
     inputs: ['script', 'storyboard', 'finalized narration audio', 'word-level timestamps', 'brand', 'permitted stills and fonts', 'optional mix tracks'],
     skill: 'skills/remotion-scene-authoring.md',
     templates: ['scripts/create-fixture.ts'],
-    commands: ['validate', 'compile', 'preview', 'render', 'finish', 'run', 'verify'],
+    commands: ['validate', 'compile', 'preview', 'render', 'finish', 'run', 'verify', 'narrate-explainer'],
   },
   load: async (manifestPath, started) => ({...await loadJob(manifestPath, started), mode: 'explainer'}),
   runtime: loaded => ({
@@ -37,3 +37,5 @@ export const explainerMode = defineMode<LoadedExplainerJob>({
   }),
   fixture: async dir => (await createFixture(dir)).job,
 });
+
+export {narrateExplainer} from './narrate.ts';

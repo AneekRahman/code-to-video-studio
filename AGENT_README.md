@@ -146,6 +146,12 @@ pnpm studio prune --older-than 48 --dry-run
 pnpm studio prune --older-than 48
 ```
 
+### Pattern D: Diagnostics & Support Bundle
+```bash
+# Export redacted environment and job diagnostic bundle without secrets or media binaries:
+pnpm studio diagnostics --job <job-id> --out work/diagnostics
+```
+
 ---
 
 ## 6. How to Build a New Local Mode

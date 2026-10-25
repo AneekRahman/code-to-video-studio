@@ -45,6 +45,7 @@ export const BrandSchema = z.strictObject({schema_version: z.literal('1.0'), bra
 export const MixSchema = z.strictObject({schema_version: z.literal('1.0'), narration_gain_db: z.number().min(-40).max(12), tracks: z.array(z.strictObject({asset_id: id, start_seconds: z.number().finite().nonnegative(), duration_seconds: z.number().finite().positive(), gain_db: z.number().min(-60).max(12), fade_in_seconds: z.number().finite().nonnegative(), fade_out_seconds: z.number().finite().nonnegative()})).max(16)});
 export type Job = z.infer<typeof JobSchema>;
 export type StoryJob = z.infer<typeof StoryJobSchema>;
+export type Script = z.infer<typeof ScriptSchema>;
 export type Scene = z.infer<typeof StoryboardSchema>['scenes'][number];
 export type Brand = z.infer<typeof BrandSchema>;
 export type Timing = z.infer<typeof TimingSchema>;

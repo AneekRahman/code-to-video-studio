@@ -45,9 +45,11 @@ test('backend refuses unsupported requests before any paid operation', async () 
   const transport: BackendTransport = async () => {calls++;throw Error('must not call');};
   assert.throws(() => createBackendProviders('',transport),/job-id/);
   const p = createBackendProviders('job',transport);
-  await assert.rejects(p.image.generate({prompt:'fixture',width:768,height:1344,seed:1},signal()),/1024/);
-  await assert.rejects(p.image.generate({prompt:'fixture',width:1024,height:1024,seed:858993460},signal()),/seed/);
-  await assert.rejects(p.audio.speak({voice_id:'requestedvoice',model:'eleven_v4',text:'Hi',seed:1},signal()),/backendconfigured/);
+  p.image.validateSize(1024, 1024);
+  p.image.validateSize(768, 1344);
+  await assert.rejects(p.image.generate({prompt:'fixture',width:800,height:600,seed:1},signal()),/1024/);
+  await assert.rejects(p.image.generate({prompt:'fixture',width:1024,height:1024,seed:4294967296},signal()),/seed/);
+  await assert.rejects(p.audio.speak({voice_id:'invalid voice space',model:'eleven_v4',text:'Hi',seed:1},signal()),/voice_id/);
   await assert.rejects(p.audio.effect({prompt:'fixture',duration_seconds:3,prompt_influence:0.5,loop:false},signal()),/prompt_influence/);
   await assert.rejects(p.audio.music({prompt:'fixture',duration_seconds:31},signal()),/3–30/);
   assert.equal(calls,0);

@@ -15,7 +15,7 @@ const maxBytes = 24 * 1024 * 1024;
 const Pointer = z.object({bucket: z.string().min(1), key: z.string().startsWith('assets/'), version_id: z.string().min(1).refine(v => v !== 'null'), sha256: z.string().regex(/^[a-f0-9]{64}$/), content_type: z.enum(['image/png', 'image/jpeg', 'audio/mpeg', 'application/json'])});
 const Receipt = z.object({ok: z.literal(true), status: z.literal('COMPLETE'), operation: z.string(), artifacts: z.array(Pointer).min(1).max(2)});
 const Timing = z.object({characters: z.array(z.string().length(1)).min(1), character_start_times_seconds: z.array(z.number().finite().nonnegative()), character_end_times_seconds: z.array(z.number().finite().nonnegative())});
-type Payload = {operation: 'image' | 'speech' | 'effect' | 'music'; text: string; seed?: number; duration_seconds?: number};
+type Payload = {operation: 'image' | 'speech' | 'effect' | 'music'; text: string; seed?: number; duration_seconds?: number; width?: number; height?: number; voice_id?: string};
 export type BackendTransport = (payload: Record<string, unknown>, signal: AbortSignal) => Promise<{receipt: unknown; download: (pointer: SourceArtifact) => Promise<Buffer>; close?: () => Promise<void>}>;
 
 export async function localEnvExists(root = packageRoot): Promise<boolean> {
@@ -56,7 +56,7 @@ export function createBackendProviders(jobId: string, transport: BackendTranspor
   requireCondition(/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(jobId), 'CONFIG_REQUIRED', 'Backend generation requires --job-id with 1–64 letters, digits, underscores or hyphens');
   async function call(payload: Payload, signal: AbortSignal) {
     requireCondition(payload.text.trim().length > 0 && payload.text.length <= (payload.operation === 'speech' ? 1500 : 1000), 'UNSUPPORTED_BACKEND_REQUEST', 'Prompt exceeds generation backend limits');
-    if (payload.seed !== undefined) requireCondition(Number.isInteger(payload.seed) && payload.seed >= 0 && payload.seed <= 858993459, 'UNSUPPORTED_BACKEND_REQUEST', 'Backend seed must be 0–858993459');
+    if (payload.seed !== undefined) requireCondition(Number.isInteger(payload.seed) && payload.seed >= 0 && payload.seed <= 4294967295, 'UNSUPPORTED_BACKEND_REQUEST', 'Backend seed must be 0–4294967295');
     if (payload.duration_seconds !== undefined) requireCondition(Number.isFinite(payload.duration_seconds) && payload.duration_seconds >= 3 && payload.duration_seconds <= (payload.operation === 'effect' ? 10 : 30), 'UNSUPPORTED_BACKEND_REQUEST', 'Backend effects support 3–10 seconds; music supports 3–30 seconds');
     const event = {action: 'generate', job_id: jobId, request_id: sha256(JSON.stringify(payload)), ...payload};
     const result = await transport(event, signal);
@@ -79,11 +79,11 @@ export function createBackendProviders(jobId: string, transport: BackendTranspor
   return {
     image: {
       provider_id: 'openmausbot-generation', model: 'nim-first-sd3-5-large-fallback', max_prompt_chars: 1000,
-      validateSize(width, height) { requireCondition(width === 1024 && height === 1024, 'UNSUPPORTED_SIZE', 'Generation backend supports 1024×1024 images only'); },
+      validateSize(width, height) { requireCondition((width === 1024 && height === 1024) || (width === 768 && height === 1344), 'UNSUPPORTED_SIZE', 'Generation backend supports 1024×1024 or 768×1344 images only'); },
       async generate(request, signal) {
         this.validateSize(request.width, request.height);
         const started = Date.now();
-        const assets = await call({operation: 'image', text: request.prompt, seed: request.seed}, signal);
+        const assets = await call({operation: 'image', text: request.prompt, seed: request.seed, width: request.width, height: request.height}, signal);
         const format = detectRasterFormat(assets[0]!.bytes);
         requireCondition(format && assets[0]!.pointer.content_type === (format === 'png' ? 'image/png' : 'image/jpeg'), 'PROVIDER_PROTOCOL', 'Backend image format is invalid');
         return {bytes: assets[0]!.bytes, format, seed: request.seed, provider_request_ms: Date.now() - started, source_artifacts: assets.map(a => a.pointer)};
@@ -92,9 +92,10 @@ export function createBackendProviders(jobId: string, transport: BackendTranspor
     audio: {
       provider_id: 'openmausbot-generation', models: {speech_default: 'eleven_multilingual_v2', effect: 'eleven_text_to_sound_v2', music: 'music_v1'},
       async speak(request, signal) {
-        requireCondition(request.voice_id === 'backendconfigured' && request.model === 'eleven_multilingual_v2' && Object.keys(request.settings ?? {}).length === 0, 'UNSUPPORTED_BACKEND_REQUEST', 'Backend speech requires voice_id backendconfigured, model eleven_multilingual_v2 and no voice settings; it uses the service-configured voice');
+        const validVoice = request.voice_id === 'backendconfigured' || /^[A-Za-z0-9_-]{1,100}$/.test(request.voice_id);
+        requireCondition(validVoice && (request.model === 'eleven_multilingual_v2' || request.model === 'eleven_v4' || request.model === 'eleven_v3') && Object.keys(request.settings ?? {}).length === 0, 'UNSUPPORTED_BACKEND_REQUEST', 'Backend speech requires a valid voice_id, supported model and no voice settings');
         const started = Date.now();
-        const assets = await call({operation: 'speech', text: request.text, seed: request.seed}, signal);
+        const assets = await call({operation: 'speech', text: request.text, seed: request.seed, voice_id: request.voice_id}, signal);
         requireCondition(assets[0]!.pointer.content_type === 'audio/mpeg' && isMp3(assets[0]!.bytes) && assets[1]!.pointer.content_type === 'application/json', 'PROVIDER_PROTOCOL', 'Backend speech artifacts are invalid');
         const value = Timing.parse(JSON.parse(assets[1]!.bytes.toString('utf8')));
         requireCondition(value.characters.join('') === request.text && value.characters.length === value.character_start_times_seconds.length && value.characters.length === value.character_end_times_seconds.length, 'PROVIDER_PROTOCOL', 'Backend speech alignment does not match the script');
