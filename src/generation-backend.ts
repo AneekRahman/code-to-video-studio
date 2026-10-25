@@ -78,7 +78,7 @@ export function createBackendProviders(jobId: string, transport: BackendTranspor
   }
   return {
     image: {
-      provider_id: 'openmausbot-generation', model: 'nim-first-nova-canvas-fallback', max_prompt_chars: 1000,
+      provider_id: 'openmausbot-generation', model: 'nim-first-sd3-5-large-fallback', max_prompt_chars: 1000,
       validateSize(width, height) { requireCondition(width === 1024 && height === 1024, 'UNSUPPORTED_SIZE', 'Generation backend supports 1024×1024 images only'); },
       async generate(request, signal) {
         this.validateSize(request.width, request.height);
