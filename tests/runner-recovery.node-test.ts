@@ -28,8 +28,11 @@ test('a live lock with a recent heartbeat fails closed and unlock requires force
   const lock = resolve(root, '.studio-lock');
   try {
     await mkdir(lock);
-    await writeFile(join(lock, 'lease.json'), JSON.stringify({pid: process.pid, hostname: hostname(), createdAt: Date.now(), heartbeatAt: Date.now()}));
+    const leasePath = join(lock, 'lease.json');
+    await writeFile(leasePath, JSON.stringify({pid: process.pid, hostname: hostname(), createdAt: Date.now(), heartbeatAt: Date.now()}));
+    const leaseBefore = await readFile(leasePath, 'utf8');
     await assert.rejects(acquireJobLock(lock), error => error instanceof Error && 'code' in error && error.code === 'JOB_LOCKED');
+    assert.equal(await readFile(leasePath, 'utf8'), leaseBefore);
     await assert.rejects(unlockJob(lock), error => error instanceof Error && 'code' in error && error.code === 'JOB_LOCKED');
     assert.equal((await unlockJob(lock, true)).status, 'unlocked');
   } finally {
@@ -47,6 +50,27 @@ test('an expired heartbeat is recovered even when its pid is alive', async () =>
     const acquired = await acquireJobLock(lock);
     assert.equal(acquired.lease.pid, process.pid);
     await acquired.release();
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('a lease write failure after mkdir removes the new lock and allows a retry', {skip: process.platform === 'win32'}, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'studio-lease-failure-'));
+  const lock = resolve(root, '.studio-lock');
+  try {
+    // A 0o500 lock directory makes the lease write fail after mkdir succeeds.
+    const previous = process.umask(0o200);
+    try {
+      await assert.rejects(acquireJobLock(lock), error => error instanceof Error && 'code' in error && (error.code === 'EACCES' || error.code === 'EPERM'));
+      await assert.rejects(stat(lock), {code: 'ENOENT'});
+    } finally {
+      process.umask(previous);
+    }
+    const acquired = await acquireJobLock(lock);
+    assert.equal(acquired.lease.pid, process.pid);
+    await acquired.release();
+    await assert.rejects(stat(lock), {code: 'ENOENT'});
   } finally {
     await rm(root, {recursive: true, force: true});
   }
