@@ -62,8 +62,10 @@ async function moveStaleLock(lock: string): Promise<void> {
 export async function acquireJobLock(path: string) {
   const lock = resolve(path);
   for (let attempt = 0; attempt < 3; attempt += 1) {
+    let created = false;
     try {
       await mkdir(lock, {mode: 0o700});
+      created = true;
       const lease: Lease = {pid: process.pid, hostname: hostname(), createdAt: Date.now(), heartbeatAt: Date.now()};
       await writeLease(lock, lease);
       let current = lease;
@@ -89,10 +91,11 @@ export async function acquireJobLock(path: string) {
         },
       };
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-        if (attempt === 0) await rm(lock, {recursive: true, force: true});
+      if (created) {
+        await rm(lock, {recursive: true, force: true});
         throw error;
       }
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
       if (!await isStale(lock)) {
         throw new StudioError('JOB_LOCKED', 'Job already has a live owner; wait for it or explicitly unlock it');
       }
