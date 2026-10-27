@@ -177,3 +177,8 @@ export async function unlockJob(path: string, force = false): Promise<{status: '
   else await moveStaleLock(lock);
   return {status: 'unlocked', lock};
 }
+
+export async function isJobLockLive(path: string): Promise<boolean> {
+  const lock = resolve(path);
+  return await lockExists(lock) && !await isStale(lock);
+}

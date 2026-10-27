@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {hostname, tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
-import {mkdir, mkdtemp, readFile, rm, stat, writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, rm, stat, utimes, writeFile} from 'node:fs/promises';
 import {spawn, type ChildProcess} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {acquireJobLock, LOCK_STALE_AFTER_MS, unlockJob} from '../src/lock.ts';
+import {acquireJobLock, isJobLockLive, LOCK_STALE_AFTER_MS, unlockJob} from '../src/lock.ts';
+import {pruneScratch} from '../src/prune.ts';
 import {cleanStudioWork} from '../src/recovery.ts';
 import {purgeCorruptDestination, resetAttempts} from '../src/recovery-state.ts';
 import {verifyArtifacts} from '../src/runner.ts';
@@ -76,6 +77,30 @@ test('a lock held by another process refuses acquire, unlock and clean whatever 
       await assert.rejects(acquireJobLock(lock), isLocked);
       await acquired.release();
       await assert.rejects(stat(lock), {code: 'ENOENT'});
+    });
+  } finally {
+    holder.kill('SIGKILL');
+    await rm(workDir, {recursive: true, force: true});
+  }
+});
+
+test('prune keeps an old lock while another process holds it and removes it once the holder is gone', {skip: process.platform === 'win32'}, async () => {
+  const workDir = await mkdtemp(join(tmpdir(), 'studio-prune-lock-'));
+  const lock = resolve(workDir, 'outputs', '.studio-lock');
+  await mkdir(resolve(workDir, 'outputs'), {recursive: true});
+  const holder = await startHolder(lock);
+  try {
+    await withFlock(async () => {
+      const old = Date.now() / 1000 - 72 * 3600;
+      await utimes(lock, old, old);
+      assert.equal((await pruneScratch({workDir, maxAgeMs: 48 * 3600 * 1000})).candidates.length, 0);
+      await stat(lock);
+      const exited = new Promise(resolvePromise => holder.once('exit', resolvePromise));
+      holder.kill('SIGKILL');
+      await exited;
+      for (let attempt = 0; attempt < 50 && await isJobLockLive(lock); attempt += 1) await new Promise(resolvePromise => setTimeout(resolvePromise, 100));
+      await utimes(lock, old, old);
+      assert.deepEqual((await pruneScratch({workDir, maxAgeMs: 48 * 3600 * 1000})).candidates.map(c => c.name), ['outputs/.studio-lock']);
     });
   } finally {
     holder.kill('SIGKILL');

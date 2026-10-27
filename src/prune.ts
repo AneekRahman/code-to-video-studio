@@ -1,4 +1,5 @@
 import {lstat, readdir, realpath, rm, stat} from 'node:fs/promises';
+import {isJobLockLive} from './lock.ts';
 import {join, resolve} from 'node:path';
 import {isWithin} from './files.ts';
 import {packageRoot} from './render.ts';
@@ -82,10 +83,7 @@ export async function pruneScratch(options: PruneOptions = {}): Promise<PruneRep
     const candidateReal = await realpath(dirPath);
     requireCondition(isWithin(canonicalWork, candidateReal), 'OUTPUT_SCOPE', 'Prune target escapes work directory');
 
-    // Skip active studio locks modified recently
-    if (displayName.endsWith('.studio-lock') && (now - candidateLstat.mtimeMs < 2 * 3600 * 1000)) {
-      return;
-    }
+    if (displayName.endsWith('.studio-lock') && await isJobLockLive(dirPath)) return;
 
     const ageMs = now - candidateLstat.mtimeMs;
     if (ageMs >= maxAgeMs) {
