@@ -8,6 +8,7 @@ import {runToolCapture} from './process.ts';
 import {packageRoot} from './render.ts';
 import {registry, type Registry} from './modes/registry.ts';
 import {pruneScratch} from './prune.ts';
+import {flockBinary} from './lock.ts';
 
 export type DoctorCheck = {check_id: string; pass: boolean; required: boolean; detail: string};
 
@@ -140,6 +141,11 @@ export function modeChecks(current: Registry): DoctorCheck[] {
   ];
 }
 
+/** Commands and guarantees this release offers; the host refuses to rely on ones a studio does not list. */
+export function capabilities(): string[] {
+  return ['unlock', 'clean', 'fresh', ...(flockBinary() ? ['flock-lock'] : [])];
+}
+
 export async function doctor(root = packageRoot, current: Registry = registry) {
   const canonical = await realpath(root);
   const checks: DoctorCheck[] = [
@@ -155,5 +161,5 @@ export async function doctor(root = packageRoot, current: Registry = registry) {
   ];
   await access(resolve(canonical, 'package.json'));
   const ready = checks.every(check => check.pass || !check.required);
-  return {status: ready ? 'ready' as const : 'not_ready' as const, bot_box: hostname() === boxHostname, studio: canonical, checks};
+  return {status: ready ? 'ready' as const : 'not_ready' as const, bot_box: hostname() === boxHostname, studio: canonical, capabilities: capabilities(), checks};
 }

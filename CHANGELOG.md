@@ -6,6 +6,16 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## v1.1.1
+
+Mode API 1.0.
+
+- Crash-safe store lock: a render holds a kernel `flock` on `.studio-lock/owner.lock` for its whole life; a lock is stale only when that flock is free. No hostname or PID test, so it is correct across bot boxes that share a hostname and have separate PID namespaces. Without util-linux `flock` (macOS) a lock is stale after a 10-minute heartbeat gap.
+- `pnpm studio unlock [--force]` frees a stale lock; `pnpm studio clean [--job <id> | --all]` removes staging, corrupt outputs and attempt ledgers while holding the lock; `--fresh` on `run`/`render` resets attempts.
+- `prune` no longer deletes a lock whose owner is alive.
+- `doctor` lists `capabilities` (`unlock`, `clean`, `fresh`, and `flock-lock` where a flock binary exists).
+- `scripts/crossbox-lock/` reproduces the two-box lock check in Linux bubblewrap boxes.
+
 ## v1.1.0
 
 Mode API 1.0.

@@ -5,6 +5,7 @@ import {join, resolve} from 'node:path';
 import {mkdir, mkdtemp, readFile, rm, stat, utimes, writeFile} from 'node:fs/promises';
 import {spawn, type ChildProcess} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {existsSync} from 'node:fs';
 import {acquireJobLock, isJobLockLive, LOCK_STALE_AFTER_MS, unlockJob} from '../src/lock.ts';
 import {pruneScratch} from '../src/prune.ts';
 import {cleanStudioWork} from '../src/recovery.ts';
@@ -199,5 +200,33 @@ test('studio clean removes staging, corrupt outputs, and attempts only in the se
     assert.equal(JSON.parse(await readFile(resolve(other, 'attempts.json'), 'utf8')).count, 2);
   } finally {
     await rm(workDir, {recursive: true, force: true});
+  }
+});
+
+test('doctor lists flock-lock only where a flock binary exists', async () => {
+  const {capabilities} = await import('../src/doctor.ts');
+  await withFlock(async () => assert.deepEqual(capabilities(), ['unlock', 'clean', 'fresh', 'flock-lock']));
+  const previous = process.env.STUDIO_FLOCK;
+  process.env.STUDIO_FLOCK = '';
+  try {
+    assert.equal(capabilities().includes('flock-lock'), ['/usr/bin/flock', '/bin/flock'].some(path => existsSync(path)));
+  } finally {
+    if (previous === undefined) delete process.env.STUDIO_FLOCK; else process.env.STUDIO_FLOCK = previous;
+  }
+});
+
+test('a process that acquires and releases the lock runs to completion', {skip: process.platform === 'win32'}, async () => {
+  const root = await mkdtemp(join(tmpdir(), 'studio-release-exit-'));
+  try {
+    const script = fileURLToPath(new URL('./fixtures/acquire-release.ts', import.meta.url));
+    const child = spawn(process.execPath, ['--experimental-strip-types', script, resolve(root, '.studio-lock')], {stdio: ['ignore', 'pipe', 'inherit'], env: {...process.env, STUDIO_FLOCK: fakeFlock}});
+    let output = '';
+    child.stdout!.on('data', chunk => { output += String(chunk); });
+    const code = await new Promise(resolvePromise => child.once('exit', resolvePromise));
+    assert.equal(code, 0);
+    assert.equal(output, 'released\n');
+    await assert.rejects(stat(resolve(root, '.studio-lock')), {code: 'ENOENT'});
+  } finally {
+    await rm(root, {recursive: true, force: true});
   }
 });

@@ -17,7 +17,7 @@ const OWNER_FILE = 'owner.lock';
 // Security invariant: liveness is a kernel flock on OWNER_FILE, never a PID or
 // hostname. Bot boxes share one hostname and each has its own PID namespace, so
 // a PID test from another box always reports the owner as dead.
-function flockBinary(): string | null {
+export function flockBinary(): string | null {
   const override = process.env.STUDIO_FLOCK;
   if (override) return override;
   return ['/usr/bin/flock', '/bin/flock'].find(path => existsSync(path)) ?? null;
@@ -51,6 +51,7 @@ function holdOwner(flock: string, file: string): Promise<ChildProcess> {
 async function releaseOwner(child: ChildProcess | null): Promise<void> {
   if (!child || child.exitCode !== null) return;
   const exited = new Promise(resolvePromise => child.once('exit', resolvePromise));
+  child.ref();
   child.stdin!.end();
   await exited;
 }
