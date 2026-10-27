@@ -36,24 +36,32 @@ owns NIM-first/Bedrock fallback, reservations, deduplication and direct S3 write
 The studio downloads exact object versions and verifies SHA-256; local plate/audio
 manifests retain `source_artifacts` S3 pointers for canonical provenance.
 
-The current deployed backend is deliberately narrower than the local providers:
+The deployed backend is narrower than the local providers. The studio fits the
+shipped templates to it automatically:
 
-- Images: **1024×1024**, at most 1,000 prompt characters and seed 0–858993459.
-  Existing vertical plate templates must be deliberately adapted; no implicit
-  resize, crop or change to framing is performed.
-- Speech: at most 1,500 characters; set sound cast `voice_id` to the explicit
-  marker **`backendconfigured`**, model `eleven_multilingual_v2`, and omit voice
-  settings. This selects the service-configured voice, not three independently
-  cast voices. Unsupported casting/model/settings are refused before generation.
-- Effects: 3–10 seconds, `loop: false`, `prompt_influence: 0.3`, matching the
-  service's fixed defaults. Music: instrumental, 3–30 seconds.
-- Backend defaults reserve USD 10/day and USD 5/job; conservative reservations
-  are not actual prices. Inspect service allowances before a multi-asset run.
+- Images: 1024×1024 or 768×1344, at most 1,000 prompt characters. Every
+  template plate prompt fits; a longer custom prompt is refused before any
+  request (`PROMPT_TOO_LONG`).
+- Speech: at most 1,500 characters, an ElevenLabs voice id the backend's
+  account holds (or `backendconfigured` for the service's own voice), and no
+  voice settings. A cast voice can name `backend_voice_id`; the backend uses it
+  instead of `voice_id`, while local ElevenLabs keeps the designed voice. The
+  isometric template's designed broadcast voice is not in the backend's account,
+  so it falls back to `backendconfigured`. An unknown voice id costs a
+  reservation and ends uncertain (HTTP 404), so set `backend_voice_id` for any
+  voice the backend's account does not hold.
+- Effects: the backend generates 3–10 seconds at a fixed prompt influence of
+  0.3 and never loops. The studio sends each effect clamped to that range; the
+  mixer trims a one-shot back to its designed length with a short fade and loops
+  looping effects itself.
+- Music: instrumental, 3–30 seconds.
+- Caps: each `--job-id` may reserve the backend's per-job cap (800 cents) and
+  the whole backend shares a daily cap. A long mode can exceed one job's cap;
+  generation resumes from its manifest, so continue with a new `--job-id`.
+  Reservations are conservative, not actual prices.
 
-Existing templates may exceed these limits; configure compatible input files or
-keep `local.env` for direct providers. Validation happens before each provider
-request, not as an all-assets budget/compatibility guarantee. Earlier successfully
-generated assets remain saved if a later request is unsupported.
+Finished exports are encoded with a capped CRF so they stay under the 16 MiB
+Pegasus review limit; `quality.json` reports `within_review_size`.
 
 `STUDIO_GENERATION_FUNCTION` and `STUDIO_GENERATION_REGION` optionally override
 the non-secret endpoint configuration. `doctor` reports backend selection without

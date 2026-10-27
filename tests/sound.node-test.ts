@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {StorySchema, SegmentTimingSchema, compileStory, estimateTiming} from '../src/modes/isometric-art-zombie-apocalypse/story.ts';
 import {SoundSchema, alignmentWords, planMix, resolveAnchor} from '../src/modes/isometric-art-zombie-apocalypse/sound.ts';
 import {knockContacts, knockLift} from '../src/modes/isometric-art-zombie-apocalypse/motion.ts';
-import {mixStory} from '../src/modes/isometric-art-zombie-apocalypse/mixdown.ts';
+import {mixGraph, mixStory} from '../src/modes/isometric-art-zombie-apocalypse/mixdown.ts';
 import {createMockAudioProvider, mockAlignment} from '../src/audiogen/mock.ts';
 import {generateAudio, loadAudio} from '../src/audio.ts';
 
@@ -80,4 +80,18 @@ test('audio generation reuses unchanged assets and writes timing the story compi
   } finally {
     await rm(dir, {recursive: true, force: true});
   }
+});
+
+test('a one-shot effect plays its designed length even when its file is longer', async () => {
+  const {sound, compiled} = await load();
+  const plan = planMix(sound, compiled);
+  const effectFiles = Object.fromEntries(sound.effects.map(e => [e.effect_id, `${e.effect_id}.mp3`]));
+  const effectDurations = Object.fromEntries(sound.effects.map(e => [e.effect_id, 3]));
+  const voiceFiles = Object.fromEntries(plan.voices.map(v => [v.segment_id, `${v.segment_id}.mp3`]));
+  const {filter} = mixGraph(plan, sound, {voiceFiles, effectFiles, effectDurations, musicFile: 'music.mp3'});
+  const doorSlam = sound.effects.find(e => e.effect_id === 'door-slam')!;
+  const index = plan.cues.findIndex(c => c.effect_id === 'door-slam' && c.end === null);
+  const chain = filter.split(';').find(part => part.endsWith(`[c${index}]`))!;
+  assert.ok(chain.includes(`atrim=0:${doorSlam.duration_seconds.toFixed(3)},`), chain);
+  assert.match(chain, /afade=t=out/);
 });

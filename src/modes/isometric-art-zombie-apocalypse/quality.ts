@@ -1,4 +1,6 @@
+import {stat} from 'node:fs/promises';
 import {runToolCapture} from '../../process.ts';
+import {REVIEW_MAX_BYTES} from '../../review-size.ts';
 import {loudnessTarget} from './mixdown.ts';
 import type {MixPlan} from './sound.ts';
 import {spokenWords, type Overlay, type TimedSegment} from './story.ts';
@@ -59,7 +61,9 @@ export async function measureExport(video: string, story: CompiledStory, plan: M
   const loudness = JSON.parse(sound.slice(sound.lastIndexOf('{'), sound.lastIndexOf('}') + 1)) as {input_i: string; input_tp: string};
   const integrated = Number(loudness.input_i);
   const truePeak = Number(loudness.input_tp);
+  const bytes = (await stat(video)).size;
   return [
+    {check_id: 'within_review_size', pass: bytes <= REVIEW_MAX_BYTES, detail: `${(bytes / 1048576).toFixed(1)} MiB, review limit ${REVIEW_MAX_BYTES / 1048576} MiB`},
     {check_id: 'integrated_loudness', pass: Math.abs(integrated - loudnessTarget.integrated) <= 1, detail: `${integrated.toFixed(2)} LUFS, target ${loudnessTarget.integrated} ± 1`},
     {check_id: 'true_peak', pass: truePeak <= loudnessTarget.truePeak, detail: `${truePeak.toFixed(2)} dBTP, ceiling ${loudnessTarget.truePeak}`},
     {check_id: 'no_unexpected_black', pass: unexpectedBlack.length === 0, detail: unexpectedBlack.length ? describe(unexpectedBlack) : 'black only inside declared cuts'},

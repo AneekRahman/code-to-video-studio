@@ -51,7 +51,7 @@ export async function mediaDuration(path: string): Promise<number> {
 function planAssets(story: ReturnType<typeof StorySchema.parse>, sound: ReturnType<typeof SoundSchema.parse>, provider: AudioProvider): Planned[] {
   const speech = story.segments.map((segment): Planned => {
     const cast = sound.cast[segment.voice];
-    return {asset_id: `speech-${segment.segment_id}`, kind: 'speech', model: cast.model, text: segment.text, request: {voice_id: cast.voice_id, model: cast.model, text: segment.text, seed: cast.seed, ...(cast.settings ? {settings: cast.settings} : {})}};
+    return {asset_id: `speech-${segment.segment_id}`, kind: 'speech', model: cast.model, text: segment.text, request: {voice_id: provider.backend && cast.backend_voice_id ? cast.backend_voice_id : cast.voice_id, model: cast.model, text: segment.text, seed: cast.seed, ...(cast.settings ? {settings: cast.settings} : {})}};
   });
   const effects = sound.effects.map((effect): Planned => ({asset_id: `effect-${effect.effect_id}`, kind: 'effect', model: provider.models.effect, request: {prompt: effect.prompt, duration_seconds: effect.duration_seconds, prompt_influence: effect.prompt_influence, loop: effect.loop}}));
   const music: Planned = {asset_id: 'music', kind: 'music', model: provider.models.music, request: {prompt: sound.music.prompt, duration_seconds: sound.music.duration_seconds}};

@@ -90,7 +90,7 @@ export function createBackendProviders(jobId: string, transport: BackendTranspor
       },
     },
     audio: {
-      provider_id: 'openmausbot-generation', models: {speech_default: 'eleven_multilingual_v2', effect: 'eleven_text_to_sound_v2', music: 'music_v1'},
+      provider_id: 'openmausbot-generation', backend: true, models: {speech_default: 'eleven_multilingual_v2', effect: 'eleven_text_to_sound_v2', music: 'music_v1'},
       async speak(request, signal) {
         const validVoice = request.voice_id === 'backendconfigured' || /^[A-Za-z0-9_-]{1,100}$/.test(request.voice_id);
         requireCondition(validVoice && (request.model === 'eleven_multilingual_v2' || request.model === 'eleven_v4' || request.model === 'eleven_v3') && Object.keys(request.settings ?? {}).length === 0, 'UNSUPPORTED_BACKEND_REQUEST', 'Backend speech requires a valid voice_id, supported model and no voice settings');
@@ -104,9 +104,10 @@ export function createBackendProviders(jobId: string, transport: BackendTranspor
         return {bytes: assets[0]!.bytes, alignment: {characters: value.characters, starts: value.character_start_times_seconds, ends: value.character_end_times_seconds}, provider_request_ms: Date.now() - started, source_artifacts: assets.map(a => a.pointer)};
       },
       async effect(request, signal) {
-        requireCondition(!request.loop && request.prompt_influence === 0.3, 'UNSUPPORTED_BACKEND_REQUEST', 'Backend effects require loop false and prompt_influence 0.3');
+        // The backend fixes prompt influence at 0.3, never loops and generates 3-10 s; the mixer trims one-shots
+        // back to their designed length and loops looping effects itself.
         const started = Date.now();
-        const assets = await call({operation: 'effect', text: request.prompt, duration_seconds: request.duration_seconds}, signal);
+        const assets = await call({operation: 'effect', text: request.prompt, duration_seconds: Math.min(10, Math.max(3, request.duration_seconds))}, signal);
         requireCondition(assets[0]!.pointer.content_type === 'audio/mpeg' && isMp3(assets[0]!.bytes), 'PROVIDER_PROTOCOL', 'Backend effect is not MP3');
         return {bytes: assets[0]!.bytes, provider_request_ms: Date.now() - started, source_artifacts: assets.map(a => a.pointer)};
       },

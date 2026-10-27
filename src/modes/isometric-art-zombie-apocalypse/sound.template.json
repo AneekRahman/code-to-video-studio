@@ -4,7 +4,7 @@
   "story_id": "rules-for-the-first-night",
   "cast": {
     "narrator": {"voice_id": "Myap7vX7L9ipoJVdyOVZ", "label": "Julian (ElevenLabs voice library)", "model": "eleven_v4", "seed": 4101, "process": "close-mic", "gain_db": 0},
-    "broadcast": {"voice_id": "39VEjjybOLlt9SowNQxJ", "label": "OMB Emergency Broadcast (ElevenLabs voice design)", "model": "eleven_v3", "seed": 4202, "process": "broadcast", "gain_db": 0},
+    "broadcast": {"voice_id": "39VEjjybOLlt9SowNQxJ", "backend_voice_id": "backendconfigured", "label": "OMB Emergency Broadcast (ElevenLabs voice design)", "model": "eleven_v3", "seed": 4202, "process": "broadcast", "gain_db": 0},
     "double": {"voice_id": "Myap7vX7L9ipoJVdyOVZ", "label": "Julian, through the door", "model": "eleven_v4", "seed": 4303, "process": "through-door", "gain_db": 0}
   },
   "effects": [

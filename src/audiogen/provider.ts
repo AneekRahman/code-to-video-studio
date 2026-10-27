@@ -22,6 +22,8 @@ export type GeneratedAudio = {source_artifacts?: SourceArtifact[]; bytes: Buffer
 export interface AudioProvider {
   readonly provider_id: string;
   readonly models: {speech_default: string; effect: string; music: string};
+  /** The OpenMausBot generation backend: casts may name a different voice for it with `backend_voice_id`. */
+  readonly backend?: boolean;
   speak(request: SpeechRequest, signal: AbortSignal): Promise<GeneratedSpeech>;
   effect(request: EffectRequest, signal: AbortSignal): Promise<GeneratedAudio>;
   music(request: MusicRequest, signal: AbortSignal): Promise<GeneratedAudio>;

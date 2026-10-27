@@ -4,6 +4,7 @@ import {resolve} from 'node:path';
 import {StudioError, requireCondition} from './errors.ts';
 import {packageRoot} from './render.ts';
 import {runTool} from './process.ts';
+import {reviewRateCap} from './review-size.ts';
 
 /**
  * three.js layers need WebGL in Remotion's headless Chrome (Remotion 4.0): ANGLE on the GPU on macOS, and
@@ -49,7 +50,7 @@ export async function renderComposition(options: CompositionRequest) {
   try {
     const composition = await selectComposition({...common, id: options.composition, timeoutInMilliseconds: remaining()});
     if (options.video) {
-      await renderMedia({...common, composition, outputLocation: options.video.path, codec: 'h264', pixelFormat: 'yuv420p', muted: true, concurrency: 1, scale: options.video.scale, crf: 18, x264Preset: 'fast', cancelSignal: cancellation.cancelSignal, timeoutInMilliseconds: remaining()});
+      await renderMedia({...common, composition, outputLocation: options.video.path, codec: 'h264', pixelFormat: 'yuv420p', muted: true, concurrency: 1, scale: options.video.scale, crf: 18, ...reviewRateCap(composition.durationInFrames / composition.fps), x264Preset: 'fast', cancelSignal: cancellation.cancelSignal, timeoutInMilliseconds: remaining()});
     }
     for (const still of options.stills) {
       await renderStill({...common, composition, output: resolve(options.workDir, still.name), frame: still.frame, scale: still.scale, imageFormat: still.format, ...(still.format === 'jpeg' ? {jpegQuality: 88} : {}), cancelSignal: cancellation.cancelSignal, timeoutInMilliseconds: remaining()});

@@ -5,6 +5,7 @@ import {resolve, extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import type {LoadedJob} from './load.ts';
 import {StudioError, requireCondition} from './errors.ts';
+import {reviewRateCap} from './review-size.ts';
 
 export const packageRoot = fileURLToPath(new URL('..', import.meta.url));
 
@@ -99,6 +100,7 @@ export async function renderVisual(loaded: LoadedJob, dir: string, kind: 'previe
       concurrency: 1,
       scale,
       crf: 20,
+      ...reviewRateCap(composition.durationInFrames / composition.fps),
       x264Preset: 'fast',
       puppeteerInstance: browser,
       cancelSignal: cancellation.cancelSignal,

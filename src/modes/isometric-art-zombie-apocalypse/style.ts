@@ -22,25 +22,25 @@ export const PlateSetSchema = z.strictObject({
 export type Plate = z.infer<typeof PlateSchema>;
 export type PlateSet = z.infer<typeof PlateSetSchema>;
 
-const camera = 'True isometric 3D render, orthographic camera at 35 degrees elevation looking from the front-left corner, consistent across the series.';
+const camera = 'True isometric 3D render, orthographic camera, 35 degree elevation from the front-left.';
 
 const framing: Record<z.infer<typeof Framing>, string> = {
-  'diorama': 'Large miniature diorama built on a single floating square tile with visible cut soil and pavement edges; the tile is big, spanning nearly the full width of the frame edge to edge, centred vertically, with modest empty space above and below.',
-  'cutaway-room': 'Large isometric cutaway room with two walls and a floor on a thin square base, dollhouse cross-section; the room is big, spanning nearly the full width of the frame edge to edge, centred vertically.',
+  'diorama': 'Miniature diorama on one floating square tile with cut soil edges, tile spanning the frame width, centred.',
+  'cutaway-room': 'Isometric dollhouse cutaway room, two walls and floor on a thin base, spanning the frame width, centred.',
   'close-diorama': 'Close-up corner of a miniature diorama on a floating tile, the subject large and centred, shallow tilt-shift depth of field.',
 };
 
-const render = 'Stylised low-poly game-art render, soft global illumination, clean bevelled shapes, subtle tilt-shift miniature blur at the edges, tactile clay and painted-wood materials, crisp silhouettes, high detail props, cinematic contrast.';
+const render = 'Stylised low-poly game art, soft global illumination, bevelled clay and painted-wood materials, tilt-shift blur, cinematic contrast.';
 
 const phase: Record<z.infer<typeof Phase>, string> = {
-  'dusk': 'Golden dusk: low warm amber sun, long soft shadows, windows glowing orange, a calm cosy palette of amber, cream and muted teal with the first hint of something wrong.',
-  'twilight': 'Blue-hour twilight: cold teal sky light, sodium streetlights flickering on, thin ground fog, a sickly green tint creeping into the shadows, dread building.',
-  'night': 'Deep night: cold blue moonlight from the upper left, dense low green-tinted fog hugging the ground, small red warning-light accents, deep shadows, eerie silent mood.',
-  'interior-night': 'Night interior: a single warm lamp pool against cold blue moonlight through the windows, deep shadows in the corners, claustrophobic and tense.',
-  'blackout': 'Power cut: almost total darkness, only cold moonlight slivers and the faint blue glow of a television, heavy vignette.',
+  'dusk': 'Golden dusk, warm amber sun, long shadows, glowing orange windows, calm palette with a hint of wrong.',
+  'twilight': 'Blue-hour twilight, cold teal light, flickering sodium streetlights, thin fog, sickly green shadows.',
+  'night': 'Deep night, cold blue moonlight, low green fog, small red warning lights, deep eerie shadows.',
+  'interior-night': 'Night interior, one warm lamp against cold blue window moonlight, dark corners, tense.',
+  'blackout': 'Power cut, near darkness, moonlight slivers, faint blue TV glow, heavy vignette.',
 };
 
-const constraints = 'Empty scene with no people, no characters, no creatures and no bodies; no text, no letters, no logos, no watermark, no UI. Dark seamless gradient background matching the lighting.';
+const constraints = 'Empty scene: no people, creatures, bodies, text, logos or UI. Dark seamless gradient background.';
 
 export function composePlatePrompt(plate: Plate): string {
   return [camera, framing[plate.framing], `Scene: ${plate.subject}`, phase[plate.phase], render, constraints].join(' ');

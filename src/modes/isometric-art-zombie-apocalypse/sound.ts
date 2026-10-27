@@ -13,6 +13,8 @@ export const VoiceProcess = z.enum(['close-mic', 'broadcast', 'through-door']);
 
 const CastSchema = z.strictObject({
   voice_id: z.string().regex(/^[A-Za-z0-9]{8,64}$/),
+  /** Voice used when generating through the OpenMausBot backend, whose ElevenLabs account may not hold `voice_id`. */
+  backend_voice_id: z.string().regex(/^[A-Za-z0-9]{8,64}$/).optional(),
   label: z.string().min(1).max(80),
   model: z.string().min(1).max(64),
   seed: z.number().int().min(0).max(4_294_967_295),

@@ -50,7 +50,6 @@ test('backend refuses unsupported requests before any paid operation', async () 
   await assert.rejects(p.image.generate({prompt:'fixture',width:800,height:600,seed:1},signal()),/1024/);
   await assert.rejects(p.image.generate({prompt:'fixture',width:1024,height:1024,seed:4294967296},signal()),/seed/);
   await assert.rejects(p.audio.speak({voice_id:'invalid voice space',model:'eleven_v4',text:'Hi',seed:1},signal()),/voice_id/);
-  await assert.rejects(p.audio.effect({prompt:'fixture',duration_seconds:3,prompt_influence:0.5,loop:false},signal()),/prompt_influence/);
   await assert.rejects(p.audio.music({prompt:'fixture',duration_seconds:31},signal()),/3–30/);
   assert.equal(calls,0);
 });
@@ -77,4 +76,16 @@ test('speech original alignment converts into the studio contract and retains bo
   const speech = await createBackendProviders('job',transport).audio.speak({voice_id:'backendconfigured',model:'eleven_multilingual_v2',text:'Hi',seed:1},signal());
   assert.deepEqual(speech.alignment,{characters:['H','i'],starts:[0,0.1],ends:[0.1,0.2]});
   assert.equal(speech.source_artifacts!.length,2);
+});
+
+test('backend effects are adapted to the service: 3-10 s, no loop or influence fields', async () => {
+  const sent: Record<string, unknown>[] = [];
+  const transport: BackendTransport = async event => {sent.push(event as Record<string, unknown>);throw Error('stop after capture');};
+  const p = createBackendProviders('job',transport);
+  for (const request of [{prompt:'knock',duration_seconds:0.6,prompt_influence:0.7,loop:false},{prompt:'wind',duration_seconds:14,prompt_influence:0.5,loop:true}]) {
+    await assert.rejects(p.audio.effect(request,signal()),/stop after capture/);
+  }
+  assert.deepEqual(sent.map(event => event.duration_seconds), [3, 10]);
+  assert.ok(sent.every(event => !('prompt_influence' in event) && !('loop' in event)));
+  assert.equal(p.audio.backend, true);
 });

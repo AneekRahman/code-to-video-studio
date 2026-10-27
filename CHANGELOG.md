@@ -6,6 +6,13 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## Unreleased
+
+Mode API 1.0.
+
+- Exports stay under the 16 MiB Pegasus review limit: final renders use a capped CRF sized from the video length, and the isometric mode's `quality.json` adds `within_review_size`.
+- Backend fit: plate style text is condensed so every template prompt fits 1,000 characters; backend effects are clamped to 3–10 s with the service's fixed settings, and the mixer trims one-shots to their designed length; cast voices may name `backend_voice_id` (the isometric broadcast voice falls back to `backendconfigured`).
+
 ## v1.1.1
 
 Mode API 1.0.

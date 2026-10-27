@@ -60,11 +60,13 @@ export function mixGraph(plan: MixPlan, sound: Sound, inputs: MixInputs): {files
   }
   plan.cues.forEach((cue, i) => {
     const source = taps.get(cue.effect_id)!.shift()!;
-    const clip = inputs.effectDurations[cue.effect_id]!;
+    const effect = sound.effects.find(e => e.effect_id === cue.effect_id);
+    const file = inputs.effectDurations[cue.effect_id]!;
+    const clip = effect && !effect.loop ? Math.min(file, effect.duration_seconds) : file;
     const length = Math.min(cue.end === null ? clip : cue.end - cue.start, plan.duration_seconds - cue.start);
     const loop = cue.end !== null && cue.end - cue.start > clip ? 'aloop=loop=-1:size=2147483647,' : '';
     const fadeIn = cue.fade_in_seconds > 0 ? `,afade=t=in:st=0:d=${seconds(cue.fade_in_seconds)}` : '';
-    const fadeOut = Math.min(cue.fade_out_seconds, length);
+    const fadeOut = Math.min(Math.max(cue.fade_out_seconds, clip < file ? 0.05 : 0), length);
     filters.push(`${source}${loop}atrim=0:${seconds(length)},asetpts=PTS-STARTPTS${fadeIn},afade=t=out:st=${seconds(length - fadeOut)}:d=${seconds(fadeOut)},volume=${cue.gain_db}dB,adelay=${Math.round(cue.start * 1000)}:all=1[c${i}]`);
     bus.push(`[c${i}]`);
   });
