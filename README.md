@@ -25,10 +25,11 @@ only, for `npx hyperframes preview` or `snapshot`.
 2. `src/audio.ts` treats voices with ffmpeg (close-mic, broadcast, through-door),
    then turns narration, cues, knocks and music into timed `<audio>` clips,
    repeating files across long spans and cutting declared silences.
-3. `src/compose.ts` writes `index.html`, plates, fonts, pinned GSAP and the
+3. `src/compose.ts` writes `index.html`, plates, fonts, pinned GSAP, Three.js and the
    runtime. `src/runtime/scene.js` draws every frame from the time alone: camera
    moves, drift and shakes, grades, fog, particles, flicker, heartbeat vignette,
-   glitch and flash transitions, clay SVG characters with gaits, captions, title,
+   glitch and flash transitions, Three.js clay characters with gaits (lit per
+   grade, with contact shadows), captions, title,
    broadcast banner and terminal, rule cards with spoken-word highlight, window
    shadows and the cut to black. One paused GSAP timeline drives it.
 4. `src/render.ts` renders with Hyperframes at a bitrate sized to stay under

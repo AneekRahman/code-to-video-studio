@@ -1,6 +1,8 @@
 // Browser runtime for one isometric story. Every frame is drawn from the timeline
 // time alone, so Hyperframes can seek to any frame and get the same picture.
-(function () {
+import * as THREE from './three.module.js';
+
+{
   const S = window.__SCENE;
   const W = S.width;
   const H = S.height;
@@ -12,9 +14,9 @@
   const lerp = (a, b, k) => a + (b - a) * k;
   const ease = { 'linear': (k) => k, 'in': (k) => k * k, 'out': (k) => 1 - (1 - k) * (1 - k), 'in-out': (k) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2) };
   const el = (tag, cls, parent) => { const node = document.createElement(tag); if (cls) node.className = cls; (parent || stage).appendChild(node); return node; };
-  const svgNS = 'http://www.w3.org/2000/svg';
 
   const world = el('div', 'world');
+  const glCanvas = el('canvas', 'gl');
   const fx = el('canvas', 'fx');
   fx.width = W; fx.height = H;
   const ctx = fx.getContext('2d');
@@ -34,85 +36,100 @@
 
   function escapeHtml(text) { return text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-  // Clay rigs ---------------------------------------------------------------
+  // Clay rigs (Three.js) ---------------------------------------------------
   const PALETTE = {
-    hero: { coat: '#f0a92a', coatDark: '#b8741a', skin: '#f2c9a0', pants: '#2c3446', hood: true, eye: '#1d1d1d' },
-    zombie: { coat: '#45607a', coatDark: '#2b3d4f', skin: '#8fae6a', pants: '#3a3226', hood: false, eye: '#e9f2c4' },
-    double: { coat: '#9a7a2a', coatDark: '#5e4612', skin: '#bfa184', pants: '#1e2330', hood: true, eye: '#ff2a2a' },
+    hero: { coat: 0xf0a92a, skin: 0xf2c9a0, pants: 0x2c3446, shoes: 0x1c1c1c, hood: true, eye: 0x161616 },
+    zombie: { coat: 0x45607a, skin: 0x8fae6a, pants: 0x3a3226, shoes: 0x241d16, hood: false, eye: 0xf0ffd0 },
+    double: { coat: 0x8a6c22, skin: 0xb39a80, pants: 0x1c2130, shoes: 0x111111, hood: true, eye: 0xff2020 },
   };
-
-  function part(parent, d, fill, extra) {
-    const p = document.createElementNS(svgNS, 'path');
-    p.setAttribute('d', d); p.setAttribute('fill', fill);
-    if (extra) Object.entries(extra).forEach(([k, v]) => p.setAttribute(k, v));
-    parent.appendChild(p); return p;
-  }
-  function group(parent) { const g = document.createElementNS(svgNS, 'g'); parent.appendChild(g); return g; }
-
-  function buildRig(actor, parent) {
-    const colors = PALETTE[actor.rig];
-    const box = el('div', 'actor', parent);
-    const svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('viewBox', '-40 -130 80 136');
-    box.appendChild(svg);
-    const defs = document.createElementNS(svgNS, 'defs');
-    defs.innerHTML = '<radialGradient id="clay-' + actor.actor_id + '-' + actor.rig + '" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="0.55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.35"/></radialGradient>';
-    svg.appendChild(defs);
-    const sheen = 'url(#clay-' + actor.actor_id + '-' + actor.rig + ')';
-    part(svg, 'M-22 2 a22 6 0 1 0 44 0 a22 6 0 1 0 -44 0', 'rgba(0,0,0,0.45)');
-    const body = group(svg);
-    const legL = group(body); const legR = group(body);
-    part(legL, 'M-11 -46 h10 v42 a5 4 0 0 1 -5 4 h-6 a4 4 0 0 1 -4 -4 z', colors.pants);
-    part(legL, 'M-15 -4 h15 a3 3 0 0 1 0 6 h-15 a3 3 0 0 1 0 -6 z', '#1a1a1a');
-    part(legR, 'M1 -46 h10 v42 a5 4 0 0 1 -5 4 h-6 a4 4 0 0 1 -4 -4 z', colors.pants);
-    part(legR, 'M0 -4 h15 a3 3 0 0 1 0 6 h-15 a3 3 0 0 1 0 -6 z', '#1a1a1a');
-    const torso = group(body);
-    const armBack = group(torso);
-    part(armBack, 'M-6 -86 h11 v36 a6 6 0 0 1 -11 0 z', colors.coatDark);
-    part(torso, 'M-17 -92 q17 -10 34 0 l3 50 q-20 8 -40 0 z', colors.coat);
-    part(torso, 'M-17 -92 q17 -10 34 0 l3 50 q-20 8 -40 0 z', sheen);
-    if (actor.rig === 'zombie') part(torso, 'M-14 -60 l6 6 l5 -7 l6 8 l5 -6 l6 7 l3 -4 v10 q-18 6 -34 0 z', colors.coatDark);
-    const head = group(torso);
-    part(head, 'M-15 -108 a15 15 0 1 0 30 0 a15 15 0 1 0 -30 0', colors.skin);
-    if (colors.hood) part(head, 'M-18 -106 q0 -22 18 -22 q18 0 18 22 q-3 -12 -18 -12 q-15 0 -18 12 z', colors.coat);
-    part(head, 'M-15 -108 a15 15 0 1 0 30 0 a15 15 0 1 0 -30 0', sheen);
-    part(head, 'M2 -110 a2.6 2.6 0 1 0 5.2 0 a2.6 2.6 0 1 0 -5.2 0', colors.eye);
-    part(head, 'M9 -110 a2.6 2.6 0 1 0 5.2 0 a2.6 2.6 0 1 0 -5.2 0', colors.eye);
-    if (actor.rig === 'zombie') part(head, 'M3 -100 q5 3 10 0', 'none', { stroke: '#3b2a1a', 'stroke-width': '2' });
-    const armFront = group(torso);
-    part(armFront, 'M-5 -86 h11 v36 a6 6 0 0 1 -11 0 z', colors.coat);
-    part(armFront, 'M-5 -86 h11 v36 a6 6 0 0 1 -11 0 z', sheen);
-    part(armFront, 'M-5 -52 a5.5 5.5 0 1 0 11 0 a5.5 5.5 0 1 0 -11 0', colors.skin);
-    if (actor.carrying === 'grocery-bag') {
-      part(armFront, 'M-9 -54 h18 l2 22 h-22 z', '#b08350');
-      part(armFront, 'M-6 -56 q2 -6 6 -2 q3 -5 6 1', '#7aa84a');
-    }
-    return { box, svg, body, legL, legR, torso, armFront, armBack, head };
+  const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(1);
+  renderer.setSize(W, H, false);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const scene3d = new THREE.Scene();
+  const camera3d = new THREE.OrthographicCamera(0, W, 0, -H, -5000, 5000);
+  camera3d.position.z = 1000;
+  const hemi = new THREE.HemisphereLight(0xbfd8ff, 0x2a2018, 1.1);
+  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  key.position.set(-0.6, 1, 0.9);
+  const rim = new THREE.DirectionalLight(0x88aaff, 0.9);
+  rim.position.set(0.8, 0.6, -0.6);
+  scene3d.add(hemi, key, rim);
+  const LIGHTS = {
+    'dusk': { sky: 0xffd6a8, ground: 0x3a2418, hemi: 1.15, key: 0xffc58a, keyI: 2.4, rim: 0xff9a6a },
+    'twilight': { sky: 0x9fd6d2, ground: 0x1a2a24, hemi: 1.0, key: 0xcfe8ff, keyI: 1.8, rim: 0x7fd0c0 },
+    'night': { sky: 0x8fb0ff, ground: 0x10181a, hemi: 0.85, key: 0xaac4ff, keyI: 1.6, rim: 0x6fe0a0 },
+    'interior-night': { sky: 0x9fb0e0, ground: 0x2a1a10, hemi: 0.95, key: 0xffd29a, keyI: 2.0, rim: 0x7090ff },
+    'blackout': { sky: 0x5a70a8, ground: 0x08080c, hemi: 0.55, key: 0x9fb8ff, keyI: 0.9, rim: 0x4a70ff },
+  };
+  const clay = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0.0 });
+  function limb(radius, length, material) {
+    const pivot = new THREE.Group();
+    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 6, 12), material);
+    mesh.position.y = -(length / 2 + radius);
+    pivot.add(mesh);
+    return pivot;
   }
 
+  // Unit rig: 1.0 tall, feet at y = 0, facing +z.
+  function buildRig(actor) {
+    const c = PALETTE[actor.rig];
+    const root = new THREE.Group();
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.26, 32), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.45, depthWrite: false }));
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.002;
+    root.add(shadow);
+    const body = new THREE.Group();
+    root.add(body);
+    const pants = clay(c.pants), coat = clay(c.coat), skin = clay(c.skin), shoes = clay(c.shoes);
+    const legL = limb(0.055, 0.26, pants); legL.position.set(-0.07, 0.4, 0);
+    const legR = limb(0.055, 0.26, pants); legR.position.set(0.07, 0.4, 0);
+    for (const leg of [legL, legR]) { const foot = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 8), shoes); foot.scale.set(1, 0.6, 1.5); foot.position.set(0, -0.37, 0.03); leg.add(foot); }
+    body.add(legL, legR);
+    const torso = new THREE.Group(); torso.position.y = 0.4; body.add(torso);
+    const trunk = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.2, 8, 16), coat);
+    trunk.position.y = 0.17; trunk.scale.set(1, 1, 0.78); torso.add(trunk);
+    if (actor.rig === 'zombie') { const rag = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.08, 9, 1, true), clay(0x2b3d4f)); rag.position.y = 0.03; rag.scale.z = 0.8; torso.add(rag); }
+    const armL = limb(0.045, 0.24, coat); armL.position.set(-0.19, 0.33, 0);
+    const armR = limb(0.045, 0.24, coat); armR.position.set(0.19, 0.33, 0);
+    for (const arm of [armL, armR]) { const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), skin); hand.position.y = -0.35; arm.add(hand); }
+    if (actor.carrying === 'grocery-bag') { const bag = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.16, 0.1), clay(0xb08350)); bag.position.set(0, -0.42, 0.02); armR.add(bag); const greens = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), clay(0x7aa84a)); greens.position.set(0, -0.32, 0.02); armR.add(greens); }
+    torso.add(armL, armR);
+    const head = new THREE.Group(); head.position.y = 0.4; torso.add(head);
+    const skull = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 16), skin); skull.position.y = 0.12; head.add(skull);
+    if (c.hood) { const hood = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.62), coat); hood.position.set(0, 0.13, -0.015); hood.rotation.x = -0.35; head.add(hood); }
+    const eyeMat = new THREE.MeshBasicMaterial({ color: c.eye });
+    for (const x of [-0.045, 0.045]) { const eye = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), eyeMat); eye.position.set(x, 0.13, 0.118); head.add(eye); }
+    if (actor.rig === 'zombie') { const jaw = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.015, 0.02), clay(0x3b2a1a)); jaw.position.set(0, 0.06, 0.118); head.add(jaw); }
+    root.visible = false;
+    scene3d.add(root);
+    return { root, body, torso, head, legL, legR, armL, armR };
+  }
+
+  const deg = (d) => (d * Math.PI) / 180;
   function pose(rig, gait, t, knocks) {
-    let legSwing = 0, armSwing = 0, armRaise = 0, lean = 0, bob = 0, headTilt = 0, breathe = 1;
-    if (gait === 'walk') { const p = Math.sin(t * Math.PI * 2 * 1.7); legSwing = 24 * p; armSwing = -20 * p; bob = Math.abs(p) * 2.5; lean = 3; }
-    else if (gait === 'run') { const p = Math.sin(t * Math.PI * 2 * 2.9); legSwing = 42 * p; armSwing = -40 * p; bob = Math.abs(p) * 5; lean = 12; }
-    else if (gait === 'shamble') { const p = Math.sin(t * Math.PI * 2 * 1.05); legSwing = 14 * p; armRaise = -78 + 6 * Math.sin(t * 5.1); lean = 9 + 3 * p; bob = Math.abs(p) * 2; headTilt = 14 + 6 * Math.sin(t * 1.7); }
-    else if (gait === 'lunge') { const p = Math.sin(t * Math.PI * 2 * 2.2); legSwing = 30 * p; armRaise = -85 + 8 * p; lean = 16; bob = Math.abs(p) * 4; headTilt = 8; }
+    let legSwing = 0, armSwing = 0, armRaise = 0, lean = 0, bob = 0, headTilt = 0, breathe = 1, knockArm = 0;
+    if (gait === 'walk') { const p = Math.sin(t * Math.PI * 2 * 1.7); legSwing = 26 * p; armSwing = -22 * p; bob = Math.abs(p) * 0.018; lean = 4; }
+    else if (gait === 'run') { const p = Math.sin(t * Math.PI * 2 * 2.9); legSwing = 46 * p; armSwing = -48 * p; bob = Math.abs(p) * 0.04; lean = 14; }
+    else if (gait === 'shamble') { const p = Math.sin(t * Math.PI * 2 * 1.05); legSwing = 16 * p; armRaise = -80 + 6 * Math.sin(t * 5.1); lean = 10 + 3 * p; bob = Math.abs(p) * 0.015; headTilt = 16 + 6 * Math.sin(t * 1.7); }
+    else if (gait === 'lunge') { const p = Math.sin(t * Math.PI * 2 * 2.2); legSwing = 32 * p; armRaise = -88 + 8 * p; lean = 18; bob = Math.abs(p) * 0.03; headTilt = 10; }
     else if (gait === 'knock') {
-      breathe = 1 + 0.012 * Math.sin(t * 2.4);
+      breathe = 1 + 0.012 * Math.sin(t * 2.4); lean = 4;
       for (const beat of knocks) {
-        for (const rap of [0, 0.2, 0.4]) {
-          const d = t - (beat + rap);
-          if (d >= -0.08 && d < 0.14) armRaise = Math.min(armRaise, -95 - 25 * Math.sin(clamp((d + 0.08) / 0.22, 0, 1) * Math.PI));
-        }
-        if (t >= beat - 0.25 && t < beat + 0.75 && armRaise === 0) armRaise = -95;
+        if (t >= beat - 0.25 && t < beat + 0.75) knockArm = -95;
+        for (const rap of [0, 0.2, 0.4]) { const d = t - (beat + rap); if (d >= -0.08 && d < 0.14) knockArm = -95 - 25 * Math.sin(clamp((d + 0.08) / 0.22, 0, 1) * Math.PI); }
       }
-      lean = 4;
     } else { breathe = 1 + 0.015 * Math.sin(t * 2.2); }
-    rig.legL.setAttribute('transform', 'rotate(' + legSwing + ' -6 -46)');
-    rig.legR.setAttribute('transform', 'rotate(' + -legSwing + ' 6 -46)');
-    rig.armFront.setAttribute('transform', 'rotate(' + (armSwing + armRaise) + ' 0 -84)');
-    rig.armBack.setAttribute('transform', 'rotate(' + (-armSwing + armRaise * 0.9) + ' 0 -84)');
-    rig.head.setAttribute('transform', 'rotate(' + headTilt + ' 0 -96)');
-    rig.torso.setAttribute('transform', 'translate(0 ' + -bob + ') rotate(' + lean + ' 0 -46) scale(1 ' + breathe + ')');
+    rig.legL.rotation.x = deg(legSwing);
+    rig.legR.rotation.x = deg(-legSwing);
+    rig.armL.rotation.x = deg(-armSwing + armRaise);
+    rig.armR.rotation.x = deg(armSwing + (knockArm || armRaise));
+    rig.head.rotation.z = deg(headTilt * 0.4);
+    rig.head.rotation.x = deg(headTilt * 0.6);
+    rig.torso.rotation.x = deg(lean);
+    rig.body.position.y = bob;
+    rig.torso.scale.y = breathe;
   }
 
   function pathAt(path, k) {
@@ -145,7 +162,7 @@
     img.width = plate.width;
     img.height = plate.height;
     const shadows = shot.windowShadows ? buildShadows(wrap, shot.windowShadows, plate) : null;
-    const actors = shot.actors.map((actor) => ({ actor, rig: buildRig(actor, wrap) }));
+    const actors = shot.actors.map((actor) => ({ actor, rig: buildRig(actor) }));
     return { shot, plate, wrap, actors, shadows };
   });
 
@@ -222,23 +239,32 @@
     view.wrap.style.filter = S.grades[shot.grade] + (glitch > 0 ? ' hue-rotate(' + Math.round(glitch * 70) + 'deg) saturate(' + (1 + glitch) + ')' : '');
     tint.style.background = S.tints[shot.grade];
 
+    const originX = W / 2 - cx * view.plate.width * scale + dx;
+    const originY = H / 2 - cy * view.plate.height * scale + dy;
+    const light = LIGHTS[shot.grade];
+    hemi.color.setHex(light.sky); hemi.groundColor.setHex(light.ground); hemi.intensity = light.hemi;
+    key.color.setHex(light.key); key.intensity = light.keyI; rim.color.setHex(light.rim);
+    for (const other of shotViews) if (other !== view) for (const { rig } of other.actors) rig.root.visible = false;
     for (const { actor, rig } of view.actors) {
       const visible = actor.enter_at === undefined || k >= actor.enter_at;
-      rig.box.style.display = visible ? 'block' : 'none';
+      rig.root.visible = visible;
       if (!visible) continue;
       const p = pathAt(actor.path, k);
       const ahead = pathAt(actor.path, Math.min(1, k + 0.02));
-      let faceLeft = ahead.x < p.x - 1e-4;
-      if (Math.abs(ahead.x - p.x) < 1e-4 && actor.facing_deg !== undefined) faceLeft = Math.abs(actor.facing_deg) > 90;
-      const h = actor.height;
-      rig.box.style.width = h * 0.6 + 'px';
-      rig.box.style.height = h + 'px';
-      rig.box.style.left = p.x * view.plate.width - h * 0.3 + 'px';
-      rig.box.style.top = p.y * view.plate.height - h + 'px';
-      rig.box.style.zIndex = String(Math.round(p.y * 1000));
-      rig.svg.style.transform = faceLeft ? 'scaleX(-1)' : 'none';
+      const vx = ahead.x - p.x, vy = ahead.y - p.y;
+      let yaw;
+      if (Math.hypot(vx, vy) > 1e-4) yaw = Math.atan2(vx, vy);
+      else yaw = actor.facing_deg !== undefined ? deg(90 + actor.facing_deg) : 0.6;
+      const sx = originX + p.x * view.plate.width * scale;
+      const sy = originY + p.y * view.plate.height * scale;
+      const size = actor.height * scale;
+      rig.root.position.set(sx, -sy, sy * 0.5);
+      rig.root.scale.setScalar(size);
+      rig.root.rotation.set(deg(28), yaw, 0, 'XYZ');
       pose(rig, actor.gait, local + hash(actor.actor_id.length) * 3, actor.gait === 'knock' ? (S.knocks[shot.shot_id] || []).map((b) => b - shot.start) : []);
     }
+    glCanvas.style.filter = glitch > 0 ? 'hue-rotate(' + Math.round(glitch * 70) + 'deg)' : 'none';
+    renderer.render(scene3d, camera3d);
     if (view.shadows) {
       const spec = shot.windowShadows;
       view.shadows.figures.forEach((f, i) => {
@@ -317,5 +343,7 @@
   const tl = window.gsap.timeline({ paused: true });
   tl.to(state, { t: S.duration, duration: S.duration, ease: 'none', onUpdate: () => render(state.t) }, 0);
   window.__sceneTimeline = tl;
+  window.__timelines = window.__timelines || {};
+  window.__timelines['root'] = tl;
   render(0);
-})();
+}

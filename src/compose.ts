@@ -71,6 +71,8 @@ export async function compose(input: string, project: string): Promise<Compositi
 
   await copyFile(join(modules, 'gsap/dist/gsap.min.js'), join(project, 'lib/gsap.min.js'));
   await copyFile(join(here, 'runtime/scene.js'), join(project, 'lib/scene.js'));
+  await copyFile(join(modules, 'three/build/three.module.js'), join(project, 'lib/three.module.js'));
+  await copyFile(join(modules, 'three/build/three.core.js'), join(project, 'lib/three.core.js'));
   const fonts = {
     'bebas.woff2': '@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2',
     'inter-800.woff2': '@fontsource/inter/files/inter-latin-800-normal.woff2',
@@ -124,11 +126,9 @@ html,body{margin:0;padding:0;background:#000}
 .world{position:absolute;inset:0;overflow:hidden}
 .shot{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform,filter}
 .plate{position:absolute;left:0;top:0;display:block}
-.actor{position:absolute}
-.actor svg{width:100%;height:100%;overflow:visible;transform-origin:50% 100%}
 .window-shadows{position:absolute;overflow:hidden}
 .shadow-figure{position:absolute;bottom:-10%;width:38%;height:105%;background:radial-gradient(ellipse 34% 22% at 50% 22%,rgba(0,0,0,.95) 98%,transparent 100%),radial-gradient(ellipse 50% 46% at 50% 82%,rgba(0,0,0,.95) 98%,transparent 100%);filter:blur(1.5px)}
-.fx,.tint,.lights-out,.flash,.black{position:absolute;inset:0;pointer-events:none}
+.gl,.fx,.tint,.lights-out,.flash,.black{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .tint{mix-blend-mode:multiply}
 .lights-out{background:#000;opacity:0}
 .flash{background:#fff;opacity:0}
@@ -161,8 +161,8 @@ ${audio}
 </div>
 <script>window.__SCENE=${JSON.stringify(scene).replace(/</g, '\\u003c')};</script>
 <script src="lib/gsap.min.js"></script>
-<script src="lib/scene.js"></script>
-<script>window.__timelines = window.__timelines || {}; window.__timelines["root"] = window.__sceneTimeline;</script>
+<script type="module" src="lib/scene.js"></script>
+<script type="module">window.__timelines = window.__timelines || {}; window.__timelines["root"] = window.__sceneTimeline;</script>
 </body></html>
 `;
 }
