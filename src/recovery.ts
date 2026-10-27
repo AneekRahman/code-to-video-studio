@@ -1,8 +1,8 @@
 import {lstat, readdir, realpath, rm} from 'node:fs/promises';
 import {join, resolve} from 'node:path';
-import {StudioError, requireCondition} from './errors.ts';
+import {requireCondition} from './errors.ts';
 import {packageRoot} from './render.ts';
-import {hasLiveJobLock, unlockJob} from './lock.ts';
+import {acquireJobLock} from './lock.ts';
 import {verifyArtifacts} from './runner.ts';
 import {purgeCorruptDestination, resetAttempts} from './recovery-state.ts';
 import {isWithin} from './files.ts';
@@ -19,33 +19,36 @@ export async function cleanStudioWork(options: {jobId?: string; all?: boolean; w
   const canonicalOutputRoot = await realpath(outputRoot);
   requireCondition(isWithin(canonicalWork, canonicalOutputRoot), 'OUTPUT_SCOPE', 'Studio outputs must stay inside work/');
   const jobNames = await readdir(canonicalOutputRoot);
-  const selectedJobs = options.all ? jobNames : jobNames.filter(name => name === options.jobId);
+  const selectedJobs = options.all ? jobNames.filter(name => !name.startsWith('.')) : jobNames.filter(name => name === options.jobId);
   const jobs: string[] = [];
   const removed: string[] = [];
-  for (const jobId of selectedJobs) {
-    const store = join(canonicalOutputRoot, jobId);
-    const storeInfo = await lstat(store).catch(() => null);
-    if (!storeInfo?.isDirectory() || storeInfo.isSymbolicLink()) continue;
-    jobs.push(jobId);
-    const lock = join(canonicalOutputRoot, '.studio-lock');
-    if (await hasLiveJobLock(lock)) throw new StudioError('JOB_LOCKED', `Job ${jobId} is active and cannot be cleaned`);
-    await unlockJob(lock);
-    const entries = await readdir(store);
-    for (const name of entries) {
-      const path = join(store, name);
-      const info = await lstat(path).catch(() => null);
-      if (!info) continue;
-      if (name.startsWith('.attempt-')) {
-        await rm(path, {recursive: true, force: true});
-        removed.push(`${jobId}/${name}`);
-      } else if (name === 'attempts.json') {
-        await resetAttempts(store);
-        removed.push(`${jobId}/${name}`);
-      } else if ((info.isDirectory() || info.isSymbolicLink()) && /^(preview|render|finish|run)-/.test(name)) {
-        const purged = await purgeCorruptDestination(path, () => verifyArtifacts(path));
-        if (purged) removed.push(`${jobId}/${name}`);
+  if (selectedJobs.length === 0) return {status: 'cleaned', jobs, removed};
+  const jobLock = await acquireJobLock(join(canonicalOutputRoot, '.studio-lock'));
+  try {
+    for (const jobId of selectedJobs) {
+      const store = join(canonicalOutputRoot, jobId);
+      const storeInfo = await lstat(store).catch(() => null);
+      if (!storeInfo?.isDirectory() || storeInfo.isSymbolicLink()) continue;
+      jobs.push(jobId);
+      const entries = await readdir(store);
+      for (const name of entries) {
+        const path = join(store, name);
+        const info = await lstat(path).catch(() => null);
+        if (!info) continue;
+        if (name.startsWith('.attempt-')) {
+          await rm(path, {recursive: true, force: true});
+          removed.push(`${jobId}/${name}`);
+        } else if (name === 'attempts.json') {
+          await resetAttempts(store);
+          removed.push(`${jobId}/${name}`);
+        } else if ((info.isDirectory() || info.isSymbolicLink()) && /^(preview|render|finish|run)-/.test(name)) {
+          const purged = await purgeCorruptDestination(path, () => verifyArtifacts(path));
+          if (purged) removed.push(`${jobId}/${name}`);
+        }
       }
     }
+  } finally {
+    await jobLock.release();
   }
   return {status: 'cleaned', jobs, removed};
 }
