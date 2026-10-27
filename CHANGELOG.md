@@ -6,7 +6,7 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
-## Unreleased
+## v1.1.2
 
 Mode API 1.0.
 
