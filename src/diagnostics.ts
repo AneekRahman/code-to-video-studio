@@ -51,7 +51,7 @@ export async function exportDiagnostics(options: DiagnosticsOptions = {}): Promi
     ffprobeVersion = raw.split('\n')[0]?.trim() ?? 'unknown';
   } catch { /* ffprobe missing */ }
 
-  let pkgVersion = '1.1.2';
+  let pkgVersion = '1.1.3';
   try {
     const rawPkg = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8')) as {version?: string};
     if (rawPkg.version) pkgVersion = rawPkg.version;

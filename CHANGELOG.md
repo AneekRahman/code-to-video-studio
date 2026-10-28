@@ -6,6 +6,12 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## v1.1.3
+
+Mode API 1.0.
+
+- The layout check no longer fails a scene for content that a box clips on purpose. The still panel holds an image that zooms slowly inside a clipping box, so from the third second its `scrollWidth` passed the 12 px tolerance and every job with a still failed `LAYOUT_OVERFLOW`, however short the title. Text and unclipped boxes are checked as before.
+
 ## v1.1.2
 
 Mode API 1.0.
