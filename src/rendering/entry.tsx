@@ -19,6 +19,7 @@ import {IsoHorror} from '../modes/isometric-art-zombie-apocalypse/rendering/scen
 import type {IsoProps} from '../modes/isometric-art-zombie-apocalypse/shots.ts';
 import {IsoStory} from '../modes/isometric-art-zombie-apocalypse/rendering/story-scene.tsx';
 import type {StoryProps} from '../modes/isometric-art-zombie-apocalypse/story.ts';
+import {overflowsItsBox} from './layout-overflow.ts';
 
 export function SceneContent({scene, stills, accent}: {scene: CompiledScene; stills: Record<string, string>; accent: string}) {
   const hasStill = scene.still_asset_id && stills[scene.still_asset_id];
@@ -83,7 +84,7 @@ export function validateSceneLayout(
 
   for (const node of descendants) {
     const elem = node as HTMLElement;
-    if (elem.scrollWidth > elem.clientWidth + 12) {
+    if (overflowsItsBox({scrollWidth: elem.scrollWidth, clientWidth: elem.clientWidth, overflowX: getComputedStyle(elem).overflowX})) {
       const overflow = Math.round(elem.scrollWidth - elem.clientWidth);
       return `content width ${Math.round(elem.scrollWidth)}px in <${elem.tagName.toLowerCase()}> exceeds container width ${Math.round(elem.clientWidth)}px by ${overflow}px`;
     }

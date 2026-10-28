@@ -8,6 +8,7 @@ import type {LoadedJob} from '../src/load.ts';
 import {loadJob} from '../src/load.ts';
 import {resolveCaptionState} from '../src/captions.ts';
 import {renderVisual, selectThumbnailFrame} from '../src/render.ts';
+import {overflowsItsBox} from '../src/rendering/layout-overflow.ts';
 import {createFixture} from '../scripts/create-fixture.ts';
 
 const sampleWords: CompiledWord[] = [
@@ -141,4 +142,12 @@ test('renderVisual validates layout against safe area and rejects overflowing co
     await rm(fixture.directory, {recursive: true, force: true});
     await rm(workDir, {recursive: true, force: true});
   }
+});
+
+test('a box that clips its overflow is not a layout overflow, an unclipped one still is', () => {
+  assert.equal(overflowsItsBox({scrollWidth: 918, clientWidth: 900, overflowX: 'hidden'}), false);
+  assert.equal(overflowsItsBox({scrollWidth: 918, clientWidth: 900, overflowX: 'clip'}), false);
+  assert.equal(overflowsItsBox({scrollWidth: 918, clientWidth: 900, overflowX: 'visible'}), true);
+  assert.equal(overflowsItsBox({scrollWidth: 912, clientWidth: 900, overflowX: 'visible'}), false);
+  assert.equal(overflowsItsBox({scrollWidth: 913, clientWidth: 900, overflowX: 'auto'}), true);
 });
