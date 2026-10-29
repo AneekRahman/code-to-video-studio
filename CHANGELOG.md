@@ -10,6 +10,7 @@ until each local mode has been migrated and passes `pnpm test:modes`.
 
 Mode API 1.0.
 
+- Pacing: `transition: auto` now puts a full-screen accent (wipe, iris, zoom) on every third boundary and cuts between the rest. Measured against a reference reel, a shutter on every boundary made the showcase cut at 44.6 a minute against the reference's 29.2, because a shutter reads as two cuts.
 - Reference videos. `studio analyze-reference --video --out` measures a reference: cut times (adaptive threshold, about 0.1 s), scenes, palette and its proportions, per-scene palette, activity, loudness, silences, and writes tile sheets of numbered frames; it reports what it cannot measure (typography, layout, motion paths, transitions, words, graphics). `studio compare-reference --analysis --video --out` measures a sample against it: palette distance (CIE76), cut rate, median scene length, activity level and burstiness, loudness, as a `measured_fidelity` with each check.
 - A mode request can carry `reference_analyses` and timestamped `observations`; `check-mode-request` refuses one that has not read its reference closely (`REFERENCE_UNDER_OBSERVED`: a scene with no observation or an unobserved required system; `REFERENCE_CHANGED`; `OBSERVATION_OUT_OF_RANGE`; `REFERENCE_UNMEASURED`).
 - `skills/reference-to-mode.md`: measure, read by timestamp, name tokens, build in stages with a comparison after each, critique by fixed passes (adapted from taste-skill, MIT; Hypit's reading approach, ideas only).

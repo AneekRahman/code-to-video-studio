@@ -41,7 +41,7 @@ Optional on any scene: `kicker` (a `/tag` chip), `emphasis` (up to 8 words to ma
 - Mark the one to three words per scene that carry the meaning in `emphasis` and in the title; more than that marks nothing.
 - Vary treatments: never the same treatment twice in a row, and never more than three `headline` scenes in a video.
 - Scenes under 2 seconds cannot animate; scenes over 8 seconds need a second beat (a list or a chart) so something moves.
-- Keep `transition` on `auto` unless a cut is the point; a `cut` suits a punchline.
+- Keep `transition` on `auto`: it puts a full-screen accent (wipe, iris, zoom) on every third boundary and cuts between the rest, which matches the pace of the reference reels we measured (about 29 cuts a minute). A shutter counts as two cuts, so setting one on every boundary makes the video cut about 1.5 times as fast. Set `transition` yourself only when a boundary is the point.
 - This mode is typography, motion and 3D: do not add generated pictures. (`still_asset_id` still validates for jobs written before v1.2.0.)
 - The loader rejects a storyboard that breaks the rules above it can check: palette against look, more than 3 WebGL scenes (iso chart, orbit, logos), a treatment used 3 times in a row, emphasis words that are never spoken. Fix the storyboard; do not change the brand to silence it.
 - Run `validate`, `compile` then `preview` and read the contact sheet before `run`. `LAYOUT_OVERFLOW` names the scene and the box: shorten the line or drop a still, do not shrink the type.

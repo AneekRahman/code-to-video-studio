@@ -54,15 +54,18 @@ test('the code lexer colours keywords, calls, strings, numbers and comments', ()
   assert.equal(tokenizeLine('a.b(c)').map(token => token.text).join(''), 'a.b(c)');
 });
 
-test('transitions rotate, honour a per-scene choice and never open the video', () => {
-  const scenes = [scene(), scene(), scene({transition: 'zoom'}), scene(), scene({transition: 'cut'}), scene()];
+test('transitions put a full-screen accent on every third boundary, honour a per-scene choice and never open the video', () => {
+  const scenes = [scene(), scene(), scene({transition: 'zoom'}), scene(), scene({transition: 'cut'}), scene(), scene(), scene()];
   assert.equal(transitionInto(scenes, 0), 'cut');
   assert.equal(transitionInto(scenes, 1), 'wipe');
   assert.equal(transitionInto(scenes, 2), 'zoom');
-  assert.equal(transitionInto(scenes, 3), 'push');
+  assert.equal(transitionInto(scenes, 3), 'cut');
   assert.equal(transitionInto(scenes, 4), 'cut');
-  const auto = Array.from({length: 9}, () => scene());
-  for (let i = 2; i < auto.length; i++) assert.notEqual(transitionInto(auto, i), transitionInto(auto, i - 1));
+  const auto = Array.from({length: 13}, () => scene());
+  const kinds = auto.map((_, i) => transitionInto(auto, i));
+  assert.deepEqual(kinds.slice(0, 8), ['cut', 'wipe', 'cut', 'cut', 'iris', 'cut', 'cut', 'zoom']);
+  assert.equal(kinds.filter(kind => kind !== 'cut').length, 4);
+  for (let i = 1; i < kinds.length; i++) assert.ok(kinds[i] === 'cut' || kinds[i - 1] === 'cut', 'accents are never adjacent');
 });
 
 test('the isometric field is deterministic', () => {
