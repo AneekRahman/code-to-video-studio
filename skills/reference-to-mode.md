@@ -2,7 +2,7 @@
 
 Trigger: A person wants a video, or a new mode, made from a reference video ("make it like this reel"), or chose "New mode from this reference" at intake.
 
-Inputs: The reference as a **file** under `work/` (the bot box has no route to Instagram or YouTube; the person attaches the file, or the operator downloads it outside the box), the person's wish, and the usual new-mode interview ([create-mode](create-mode.md)).
+Inputs: The reference as a **file** under `work/`: read a saved reference into `work/ref/` with the host's `video_save_reference` (the host and the Trend Scout fetch links; the bot box itself has no route to Instagram or YouTube), or use a file the person attached. Plus the person's wish and the usual new-mode interview ([create-mode](create-mode.md)).
 
 Credit: the measure-look-critique-fix loop and the fixed critique passes are adapted from [taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT, Leonxlnx); reading a reference by timecode before copying anything is adapted from Hypit's published reference-video guidance. No code from either is used.
 
