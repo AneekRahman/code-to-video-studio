@@ -35,7 +35,7 @@ export const StoryJobSchema = z.strictObject({
 });
 export const ScriptSchema = z.strictObject({schema_version: z.literal('1.0'), segments: z.array(z.strictObject({segment_id: id, text: z.string().min(1).regex(/[\p{L}\p{N}]/u, 'Script segment must contain spoken characters')})).min(1)});
 export const TimingSchema = z.strictObject({schema_version: z.literal('1.0'), audio_sha256: z.string().regex(/^[a-f0-9]{64}$/), duration_seconds: z.number().finite().positive(), words: z.array(z.strictObject({segment_id: id, text: z.string().min(1).regex(/[\p{L}\p{N}]/u, 'Timed word must contain spoken characters'), start: z.number().finite().nonnegative(), end: z.number().finite().positive()})).min(1)});
-export const treatments = ['headline', 'comparison', 'checklist', 'stat', 'quote', 'steps', 'chart', 'code', 'grid', 'gauge', 'orbit'] as const;
+export const treatments = ['headline', 'comparison', 'checklist', 'stat', 'quote', 'steps', 'chart', 'code', 'grid', 'gauge', 'orbit', 'logos'] as const;
 export const transitions = ['auto', 'cut', 'wipe', 'push', 'iris', 'zoom'] as const;
 export const StoryboardSchema = z.strictObject({schema_version: z.literal('1.0'), scenes: z.array(z.strictObject({
   scene_id: id, start_seconds: z.number().finite().nonnegative(), end_seconds: z.number().finite().positive(),
@@ -46,6 +46,7 @@ export const StoryboardSchema = z.strictObject({schema_version: z.literal('1.0')
   data: z.array(z.strictObject({label: z.string().min(1).max(18), value: z.number().finite().nonnegative()})).min(2).max(6).optional(),
   unit: z.string().max(8).optional(),
   chart_style: z.enum(['bars', 'iso']).optional(),
+  logos: z.array(z.enum(['youtube', 'instagram'])).min(1).max(2).optional(),
   emphasis: z.array(z.string().min(1).max(24)).max(8).optional(),
   code: z.strictObject({language: z.string().min(1).max(16), text: z.string().min(1).max(480), highlight: z.array(z.number().int().positive()).max(6).optional()}).optional(),
   transition: z.enum(transitions).optional(),

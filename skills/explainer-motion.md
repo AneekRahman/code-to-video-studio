@@ -23,10 +23,11 @@ One idea per scene, one treatment per idea.
 | `chart` | `data` (2-6), `unit`, `chart_style` `bars` or `iso` | Compare quantities; `iso` ranks them on a three.js 3D bar field |
 | `code` | `code.language`, `code.text` (<=10 lines of <=38 characters), `code.highlight` (line numbers) | Show how something is written |
 | `grid` | `value` (1-24), `suffix` | A count of things, lighting one by one |
+| `logos` | `logos` (`youtube`, `instagram`), `lines` | An opening scene with the platform logos in 3D (three.js) |
 | `orbit` | `value` (3-12), `suffix` | A hero scene: a starburst with that many blocks orbiting it (three.js) |
 | `gauge` | `value` (0-100), `suffix`, `lines[0]` (verdict) | A score |
 
-Optional on any scene: `kicker` (a `/tag` chip), `emphasis` (up to 8 spoken words to mark in the captions), `still_asset_id` with `still_layout` `panel` or `full` and `still_motion`, and `transition` into the scene (`auto`, `cut`, `wipe`, `push`, `iris`, `zoom`). Wrap the words to colour in a title in `*asterisks*`.
+Optional on any scene: `kicker` (a `/tag` chip), `emphasis` (up to 8 words to mark in the captions; each must be spoken in that scene), and `transition` into the scene (`auto`, `cut`, `wipe`, `push`, `iris`, `zoom`). Wrap the words to colour in a title in `*asterisks*`.
 
 ## Rules that make it good
 
@@ -35,9 +36,8 @@ Optional on any scene: `kicker` (a `/tag` chip), `emphasis` (up to 8 spoken word
 - Vary treatments: never the same treatment twice in a row, and never more than three `headline` scenes in a video.
 - Scenes under 2 seconds cannot animate; scenes over 8 seconds need a second beat (a list or a chart) so something moves.
 - Keep `transition` on `auto` unless a cut is the point; a `cut` suits a punchline.
-- A full-bleed still needs a dark or soft image; text sits over a scrim, not over detail.
-- Use `chart_style: iso` and `orbit` once or twice a video: they are the heaviest scenes to render (WebGL; slower on GPU-less hosts).
-- Pictures: a meme-style hook (full-bleed `still_layout`, `push-in`) in the first scene and one picture panel mid-video keep a talking explainer alive; generate them without text in the image, put words in the title and captions.
+- This mode is typography, motion and 3D: do not add generated pictures. (`still_asset_id` still validates for jobs written before v1.2.0.)
+- The loader rejects a storyboard that breaks the rules above it can check: palette against look, more than 3 WebGL scenes (iso chart, orbit, logos), a treatment used 3 times in a row, emphasis words that are never spoken. Fix the storyboard; do not change the brand to silence it.
 - Run `validate`, `compile` then `preview` and read the contact sheet before `run`. `LAYOUT_OVERFLOW` names the scene and the box: shorten the line or drop a still, do not shrink the type.
 
 Permitted tools: Catalog, local previews and tests. This instruction grants no tools, credentials or access.

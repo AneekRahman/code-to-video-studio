@@ -9,6 +9,7 @@ import {transitionInto} from '../src/rendering/motion/transition-plan.ts';
 import {contextHeight} from '../src/rendering/motion/field.ts';
 import {paletteFor, readableOn, rotateHue} from '../src/rendering/motion/theme.ts';
 import {normalizeWordTimings} from '../src/modes/explainer/timing.ts';
+import {lintStoryboard, usesWebGL} from '../src/storyboard-lint.ts';
 
 const scene = (overrides: Partial<CompiledScene> = {}): CompiledScene => ({scene_id: 's', start_seconds: 0, end_seconds: 3, treatment: 'headline', title: 't', lines: [], narration_segment_ids: ['n1'], startFrame: 100, endFrame: 190, ...overrides});
 
@@ -135,4 +136,26 @@ test('word timings from a speech aligner are given a frame of life and never ove
   }
   assert.ok(fixed.at(-1)!.end <= 0.5 + 1e-9);
   assert.deepEqual(normalizeWordTimings([{segment_id: 'n1', text: 'ok', start: 0.1, end: 0.4}], 1), [{segment_id: 'n1', text: 'ok', start: 0.1, end: 0.4}]);
+});
+
+const brandOf = (overrides: Record<string, unknown> = {}) => BrandSchema.parse({schema_version: '1.0', brand_id: 'b', version: '1', background: '#f6f3ec', foreground: '#141414', accent: '#e8764b', font_asset_id: 'f', caption_mode: 'phrase', look: 'paper', safe_area: {top: 1, bottom: 1, left: 1, right: 1}, ...overrides});
+const words = new Map([['n1', ['one', 'two']]]);
+
+test('lint accepts a well-formed paper storyboard', () => {
+  assert.deepEqual(lintStoryboard([scene({emphasis: ['One']})], brandOf(), words), []);
+});
+
+test('lint refuses a palette that cannot carry its look', () => {
+  assert.match(lintStoryboard([scene()], brandOf({background: '#101418', foreground: '#f4f4f4'}), words).join(' '), /paper look needs a light background/);
+  assert.match(lintStoryboard([scene()], brandOf({look: 'studio'}), words).join(' '), /studio look needs a dark background/);
+  assert.match(lintStoryboard([scene()], brandOf({foreground: '#e8e4da'}), words).join(' '), /contrast/);
+});
+
+test('lint caps WebGL scenes and repeated treatments, and checks emphasis is spoken', () => {
+  const heavy = [scene({scene_id: 'a', treatment: 'orbit'}), scene({scene_id: 'b', treatment: 'logos'}), scene({scene_id: 'c', treatment: 'chart', chart_style: 'iso'}), scene({scene_id: 'd', treatment: 'chart', chart_style: 'iso'})];
+  assert.ok(usesWebGL(heavy[3]!) && !usesWebGL(scene()));
+  assert.match(lintStoryboard(heavy, brandOf(), words).join(' '), /4 WebGL scenes/);
+  const same = [scene({scene_id: 'a'}), scene({scene_id: 'b'}), scene({scene_id: 'c'})];
+  assert.match(lintStoryboard(same, brandOf(), words).join(' '), /3rd 'headline' scene in a row/);
+  assert.match(lintStoryboard([scene({emphasis: ['three']})], brandOf(), words).join(' '), /never says/);
 });

@@ -698,6 +698,23 @@
       "performance": "WebGL: ANGLE on macOS, swangle (CPU) elsewhere; the layout check creates no context",
       "accessibility": "mobile readability and contrast require review",
       "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "LogoStage",
+      "version": "0.2.0",
+      "purpose": "Three.js YouTube and Instagram logos that drop in with a spin, land with a shockwave and confetti, then float",
+      "inputs": {
+        "platforms": "youtube | instagram, 1-2"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "WebGL: ANGLE on macOS, swangle (CPU) elsewhere; the layout check creates no context",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
     }
   ]
 }

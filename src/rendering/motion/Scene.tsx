@@ -5,6 +5,7 @@ import {BarChart, CheckRows, PointRows, QuoteBlock, StatBlock, StepsRail, Versus
 import {CodeWindow} from './Code.tsx';
 import {ChipGrid, Gauge} from './Showpieces.tsx';
 import {BarField, OrbitHero} from './Showpieces3D.tsx';
+import {LogoStage} from './Logos3D.tsx';
 
 const compactStill = new Set<CompiledScene['treatment']>(['code', 'chart', 'steps', 'grid', 'gauge', 'orbit']);
 
@@ -15,6 +16,7 @@ function Body({scene, palette}: {scene: CompiledScene; palette: Palette}) {
     case 'stat': return <StatBlock value={scene.value ?? 0} suffix={scene.suffix ?? ''} lines={scene.lines} palette={palette}/>;
     case 'quote': return <QuoteBlock lines={scene.lines} palette={palette}/>;
     case 'steps': return <StepsRail lines={scene.lines} palette={palette}/>;
+    case 'logos': return <div style={{display: 'flex', flexDirection: 'column', gap: 24}}><LogoStage platforms={scene.logos ?? ['youtube', 'instagram']} palette={palette}/>{scene.lines.length > 0 ? <PointRows lines={scene.lines} palette={palette}/> : null}</div>;
     case 'orbit': return <OrbitHero count={scene.value ?? 3} label={scene.suffix ?? ''} palette={palette}/>;
     case 'grid': return <ChipGrid count={scene.value ?? 1} label={scene.suffix ?? ''} lines={scene.lines} palette={palette}/>;
     case 'gauge': return <Gauge value={scene.value ?? 0} label={scene.suffix ?? ''} verdict={scene.lines[0]} palette={palette}/>;

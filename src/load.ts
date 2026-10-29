@@ -5,6 +5,7 @@ import {readJson, resolveInput, sha256} from './files.ts';
 import {requireCondition} from './errors.ts';
 import {compileTimeline} from './timeline.ts';
 import {probe} from './media.ts';
+import {lintStoryboard} from './storyboard-lint.ts';
 
 async function validateRasterAsset(path: string): Promise<void> {
   const fh = await open(path, 'r');
@@ -77,6 +78,10 @@ export async function loadJob(path: string, started = Date.now()) {
   requireCondition(Math.abs(narration.duration - timing.duration_seconds) <= 1 / job.format.fps, 'TIMING_CONFLICT', 'Timestamp duration does not match actual audio');
   requireCondition(narration.duration <= job.format.duration_seconds + 1 / job.format.fps, 'TIMING_CONFLICT', 'Narration audio duration exceeds output duration beyond one frame tolerance');
   const timeline = compileTimeline(job, storyboard.scenes, timing, script.segments);
+  const spokenWords = new Map<string, string[]>();
+  for (const word of timing.words) spokenWords.set(word.segment_id, [...(spokenWords.get(word.segment_id) ?? []), word.text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')]);
+  const lint = lintStoryboard(timeline.scenes, brand, spokenWords);
+  requireCondition(lint.length === 0, 'STORYBOARD_LINT', `Storyboard breaks explainer rules: ${lint.join('; ')}`);
   const asset = (id: string, kind: 'still' | 'audio' | 'font') => job.assets.find(a => a.asset_id === id && a.kind === kind);
   requireCondition(asset(brand.font_asset_id, 'font'), 'MISSING_FONT', 'Brand must reference a pinned font asset');
   for (const scene of storyboard.scenes) {

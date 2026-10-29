@@ -10,3 +10,4 @@ export {Kicker, SplitTitle, StillBackground, StillPanel} from './motion/Title.ts
 export {SceneShell, TransitionLayer, transitionInto} from './motion/Transitions.tsx';
 export {BarChart, CheckRows, PointRows, QuoteBlock, StatBlock, StepsRail, VersusRows} from './motion/Treatments.tsx';
 export {fontFamilies, paletteFor, surface} from './motion/theme.ts';
+export {LogoStage} from './motion/Logos3D.tsx';
