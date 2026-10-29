@@ -50,6 +50,7 @@ person, their recorded answer to the new-mode offer.
 Examples: "Explain three ways to save on groceries" → explainer, offer made.
 "Rules for surviving the first night of the outbreak, in the isometric style"
 → `isometric-art-zombie-apocalypse`, no offer.
+"What if every clap was twice as strong as the last?" → `low-poly-3d-what-if`, no offer (a climbing counter told through scale). "Seven facts about sound" → explainer: a list of facts is not an escalation.
 
 Evidence: [mode tests](../tests/modes.node-test.ts) and
 [local mode tests](../tests/local-modes.node-test.ts).

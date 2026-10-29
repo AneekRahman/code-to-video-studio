@@ -119,6 +119,12 @@ pnpm studio modes
    * **Visuals:** Atmospheric isometric diorama plates generated via NVIDIA NIM FLUX 3 Klein, with 3D clay rigs animated via `@remotion/three`.
    * **Audio:** ElevenLabs narration with word timing, synchronized emergency broadcast audio, 40+ sound effects, and tension score.
 
+3. **`low-poly-3d-what-if` (Escalation Mode)**
+   * **Purpose:** 45–120 second "what if X doubled every second / was twice as loud as the last" shorts: a counter climbs past everyday, absurd, then cosmic comparisons while one 3D world outgrows the street, the city, the planet and the sun, ending on a quiet punchline.
+   * **Visuals:** One flat-shaded low-poly world drawn with three.js (street, bathroom, portrait, suburb, city, terrain, globe, sun, space, explosion), a blocky hero, a serif HUD with a red pill, one caption per rung, a breaking-news lower third. Frames are a pure function of time, so any frame can be rendered alone.
+   * **Audio:** A voiced shout and a bass hit per rung that grow to the end, an optional rising bed, silence for the final beat, mastered to −14 LUFS. Pass a voice provider's shout with `--shout`; otherwise a synthesised vowel stands in.
+   * **Commands:** `package-what-if`, then `validate`, `preview`, `run`. Skill: [`skills/low-poly-3d-what-if.md`](skills/low-poly-3d-what-if.md).
+
 ### Creating New Modes
 
 ```bash

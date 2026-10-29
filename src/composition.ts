@@ -67,6 +67,10 @@ export async function renderComposition(options: CompositionRequest) {
 }
 
 export async function writeContactSheet(dir: string, stills: string[], cell: {w: number; h: number}, name: string) {
+  if (stills.length === 1) {
+    await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', '-i', resolve(dir, stills[0]!), '-vf', `scale=${cell.w}:${cell.h}`, '-frames:v', '1', '-q:v', '3', resolve(dir, name)], 120_000);
+    return name;
+  }
   const columns = Math.min(8, stills.length);
   const filter = `${stills.map((_, i) => `[${i}:v]scale=${cell.w}:${cell.h}[c${i}]`).join(';')};${stills.map((_, i) => `[c${i}]`).join('')}xstack=inputs=${stills.length}:layout=${stills.map((_, i) => `${(i % columns) * cell.w}_${Math.floor(i / columns) * cell.h}`).join('|')}:fill=black[out]`;
   await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', ...stills.flatMap(s => ['-i', resolve(dir, s)]), '-filter_complex', filter, '-map', '[out]', '-frames:v', '1', '-q:v', '3', resolve(dir, name)], 120_000);

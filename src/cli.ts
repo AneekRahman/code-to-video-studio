@@ -16,6 +16,7 @@ import {resolveSecret} from './imagegen/credentials.ts';
 import {previewShots, previewStory} from './modes/isometric-art-zombie-apocalypse/preview.ts';
 import {generateAudio} from './audio.ts';
 import {packageStory} from './modes/isometric-art-zombie-apocalypse/package.ts';
+import {packageWhatIf} from './modes/low-poly-3d-what-if/package.ts';
 import {createElevenLabsProvider} from './audiogen/elevenlabs.ts';
 import {createMockAudioProvider} from './audiogen/mock.ts';
 import {modeCatalog, requireNoCollisions} from './modes/registry.ts';
@@ -57,7 +58,7 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, script: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}, voice: {type: 'string'}, seed: {type: 'string'}, storyboard: {type: 'string'}, video: {type: 'string'}, analysis: {type: 'string'}, 'cut-threshold': {type: 'string'}, brand: {type: 'string'}, timestamps: {type: 'string'}, look: {type: 'string'}, scenes: {type: 'string'}, fresh: {type: 'boolean'}, force: {type: 'boolean'}, all: {type: 'boolean'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, escalation: {type: 'string'}, 'audio-plan': {type: 'string'}, shout: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, script: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}, voice: {type: 'string'}, seed: {type: 'string'}, storyboard: {type: 'string'}, video: {type: 'string'}, analysis: {type: 'string'}, 'cut-threshold': {type: 'string'}, brand: {type: 'string'}, timestamps: {type: 'string'}, look: {type: 'string'}, scenes: {type: 'string'}, fresh: {type: 'boolean'}, force: {type: 'boolean'}, all: {type: 'boolean'}}});
   const command = positionals[0];
   if (command === 'unlock') return unlockJob(resolve(values.out ?? resolve(packageRoot, 'work/outputs'), '.studio-lock'), values.force);
   if (command === 'clean') return cleanStudioWork({jobId: values.job, all: values.all});
@@ -131,6 +132,10 @@ async function main() {
   if (command === 'package-story') {
     requireCondition(values.story && values.sound && values.plates && values.audio && values.out, 'USAGE', 'package-story requires --story <story.json> --sound <sound.json> --plates <plates directory> --audio <audio directory> --out <empty job directory> [--job-id id]');
     return packageStory({story: values.story, sound: values.sound, plates: values.plates, audio: values.audio, out: values.out, jobId: values['job-id']});
+  }
+  if (command === 'package-what-if') {
+    requireCondition(values.escalation && values['audio-plan'] && values.out, 'USAGE', 'package-what-if requires --escalation <escalation.json> --audio-plan <audio.json> --out <empty directory under work/> [--shout <clip.mp3>] [--job-id <id>]');
+    return packageWhatIf({escalation: values.escalation, audio: values['audio-plan'], shout: values.shout, out: values.out, jobId: values['job-id']});
   }
   if (command === 'schemas') return {schema_version: '1.0', schemas: schemas()};
   if (command === 'catalog') return JSON.parse(await readFile(new URL('../catalog/components.json', import.meta.url), 'utf8'));

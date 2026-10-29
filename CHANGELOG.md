@@ -6,6 +6,12 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## Unreleased
+
+Mode API 1.0.
+
+- New mode `low-poly-3d-what-if`: counter-ladder "what if" shorts in one low-poly three.js world, with a HUD, captions, a news lower third, a built-in sound design and measured checks (`quality.json`). Command `package-what-if`; schemas `what_if`, `what_if_audio`, `what_if_job`; skill `skills/low-poly-3d-what-if.md`. Adds the exact-pinned dependency `@fontsource/lora`.
+
 ## v1.3.0
 
 Mode API 1.0.

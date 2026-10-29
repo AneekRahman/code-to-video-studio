@@ -82,7 +82,7 @@ export function tileTimes(boundaries: number[], duration: number, limit = 32): n
     times.add(Number((start + span * 0.55).toFixed(2)));
     if (span > 4) times.add(Number((start + span * 0.85).toFixed(2)));
   }
-  let sorted = [...times].filter(t => t >= 0 && t < duration).sort((a, b) => a - b).filter((t, i, all) => i === 0 || t - all[i - 1]! >= 0.2);
+  let sorted = [...times].filter(t => t >= 0 && t < duration - 0.12).sort((a, b) => a - b).filter((t, i, all) => i === 0 || t - all[i - 1]! >= 0.2);
   while (sorted.length > limit) sorted = sorted.filter((_, i) => i % 2 === 0 || i === sorted.length - 1);
   return sorted;
 }

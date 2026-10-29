@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "what_if_id": "what-if-template",
+  "first_shout_db": -30,
+  "last_shout_db": -3,
+  "mute_rungs": [],
+  "shout_stretch": 0.25,
+  "bass_db": -6,
+  "bed_start_db": -40,
+  "bed_end_db": -14
+}

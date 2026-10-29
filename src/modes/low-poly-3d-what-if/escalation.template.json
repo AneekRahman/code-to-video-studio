@@ -1,0 +1,181 @@
+{
+  "schema_version": "1.0",
+  "what_if_id": "what-if-template",
+  "fps": 30,
+  "duration_seconds": 46,
+  "title": {
+    "lines": [
+      "What if every clap",
+      "was twice as strong",
+      "as the last?"
+    ],
+    "to_seconds": 2.4,
+    "black_until_seconds": 0
+  },
+  "hud": {
+    "kicker": "Clap #{n}",
+    "pill": "Twice as strong every time",
+    "value_color": "#ffffff",
+    "clock": false
+  },
+  "counter": {
+    "kind": "geometric",
+    "start": 1,
+    "ratio": 2,
+    "unit": "J",
+    "first_at_seconds": 2.4,
+    "period_seconds": 1.2,
+    "rungs": 30
+  },
+  "rungs": [
+    {
+      "comparison": "A POLITE CLAP",
+      "caption": "One clap. Nobody notices.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A DOOR SLAM",
+      "caption": "Heads turn.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A FIRECRACKER",
+      "caption": "A dog starts barking.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A BALLOON POP",
+      "caption": "Every pigeon on the street takes off.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A CAMERA FLASH BULB",
+      "caption": "Windows start to rattle.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A STICK OF DYNAMITE",
+      "caption": "The street clears.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A CAR CRASH",
+      "detail": "ENERGY ≈ 8 KILOJOULES",
+      "caption": "Every car alarm in town goes off.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A WRECKING BALL",
+      "detail": "ENERGY ≈ 32 KILOJOULES",
+      "caption": "The block is evacuated.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A SMALL BOMB",
+      "detail": "ENERGY ≈ 131 KILOJOULES",
+      "caption": "The city feels it.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A TANK SHELL",
+      "detail": "ENERGY ≈ 524 KILOJOULES",
+      "caption": "Seismographs pick it up.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A LIGHTNING BOLT",
+      "detail": "ENERGY ≈ 2 MEGAJOULES",
+      "caption": "The country is watching.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A METEOR",
+      "detail": "ENERGY ≈ 8 MEGAJOULES",
+      "caption": "The sky turns white.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A VOLCANO",
+      "detail": "ENERGY ≈ 34 MEGAJOULES",
+      "caption": "The ground gives way.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "A SMALL MOON",
+      "detail": "ENERGY ≈ 134 MEGAJOULES",
+      "caption": "The planet is not holding together.",
+      "caption_rungs": 2
+    },
+    {},
+    {
+      "comparison": "THE END OF EVERYTHING",
+      "detail": "ENERGY ≈ 268 MEGAJOULES",
+      "caption": "Nothing is left to clap.",
+      "caption_rungs": 2
+    },
+    {
+      "comparison": "SILENCE",
+      "value_text": "0 J",
+      "caption": "In space, nobody hears you clap.",
+      "caption_rungs": 1
+    }
+  ],
+  "shots": [
+    {
+      "world": "street",
+      "from_seconds": 0,
+      "to_seconds": 14,
+      "seed": 3
+    },
+    {
+      "world": "city",
+      "from_seconds": 14,
+      "to_seconds": 22,
+      "seed": 4
+    },
+    {
+      "world": "terrain",
+      "from_seconds": 22,
+      "to_seconds": 29,
+      "seed": 5
+    },
+    {
+      "world": "globe",
+      "variant": "earth",
+      "from_seconds": 29,
+      "to_seconds": 35.5,
+      "seed": 6
+    },
+    {
+      "world": "explosion",
+      "from_seconds": 35.5,
+      "to_seconds": 38.5,
+      "seed": 7
+    },
+    {
+      "world": "space",
+      "variant": "plain",
+      "from_seconds": 38.5,
+      "to_seconds": 46,
+      "seed": 8
+    }
+  ],
+  "news": [],
+  "ending": {
+    "from_seconds": 46,
+    "silence_from_seconds": 38.5
+  }
+}

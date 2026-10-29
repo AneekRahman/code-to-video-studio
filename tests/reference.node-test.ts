@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, rm} from 'node:fs/promises';
+import {mkdtemp, rm, stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {test} from 'node:test';
 import {runTool} from '../src/process.ts';
 import {analyzeReference, compareAnalyses, tileTimes} from '../src/reference.ts';
+import {writeContactSheet} from '../src/composition.ts';
 import {autoCutThreshold, cutsFromScores, deltaE, dominantColors, fromHex, median, paletteDistance, pearson, resample} from '../src/reference-math.ts';
 
 async function clip(dir: string, name: string, segments: [string, number][], withAudio = true): Promise<string> {
@@ -134,4 +135,22 @@ test('a request is refused for a reference it has not read closely', async () =>
 test('an observation must describe behaviour, not name a thing', () => {
   assert.throws(() => request([observe(0, 1, 'motion')].map(o => ({...o, behavior: 'a card'}))), /Describe the behaviour/);
   assert.throws(() => request([observe(2, 1, 'motion')]));
+});
+
+test('tile times keep clear of the last frame, where a seek returns no picture', () => {
+  const times = tileTimes([0, 40, 109.9, 110.07, 110.1], 110.1);
+  assert.ok(times.length > 0 && times.every(t => t < 110.1 - 0.12), JSON.stringify(times));
+});
+
+test('a contact sheet of one picture is that picture, not an error', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'studio-sheet-'));
+  try {
+    await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', '-f', 'lavfi', '-i', 'color=c=red:s=64x64:d=0.1', '-frames:v', '1', join(dir, 'a.jpg')]);
+    assert.equal(await writeContactSheet(dir, ['a.jpg'], {w: 32, h: 32}, 'sheet.jpg'), 'sheet.jpg');
+    assert.ok((await stat(join(dir, 'sheet.jpg'))).size > 0);
+    await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', '-i', join(dir, 'a.jpg'), join(dir, 'b.jpg')]);
+    assert.equal(await writeContactSheet(dir, ['a.jpg', 'b.jpg'], {w: 32, h: 32}, 'two.jpg'), 'two.jpg');
+  } finally {
+    await rm(dir, {recursive: true, force: true});
+  }
 });

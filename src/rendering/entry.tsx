@@ -14,6 +14,7 @@ import type {IsoProps} from '../modes/isometric-art-zombie-apocalypse/shots.ts';
 import {IsoStory} from '../modes/isometric-art-zombie-apocalypse/rendering/story-scene.tsx';
 import type {StoryProps} from '../modes/isometric-art-zombie-apocalypse/story.ts';
 import {overflowsItsBox} from './layout-overflow.ts';
+import {WhatIf, type WhatIfProps} from '../modes/low-poly-3d-what-if/rendering/scene.tsx';
 
 const FIRST_SCENE_LEAD = 10;
 
@@ -198,6 +199,8 @@ const defaults: RenderProps = {
 const isoDefaults: IsoProps = {width: 1080, height: 1920, fps: 30, durationInFrames: 30, plates: {}, shots: []};
 const storyDefaults: StoryProps = {...isoDefaults, segments: [], overlays: [], fonts: {display: 'unconfigured.woff2', mono: 'unconfigured.woff2', caption: 'unconfigured.woff2'}};
 
+const whatIfDefaults: WhatIfProps = {width: 1080, height: 1920, fps: 30, durationInFrames: 30, escalation: {} as WhatIfProps['escalation'], fonts: []};
+
 function Root() {
   return (
     <>
@@ -209,6 +212,16 @@ function Root() {
       fps={30}
       durationInFrames={30}
       defaultProps={storyDefaults}
+      calculateMetadata={({props}) => ({durationInFrames: props.durationInFrames, fps: props.fps, width: props.width, height: props.height})}
+    />
+    <Composition
+      id="WhatIf"
+      component={WhatIf}
+      width={1080}
+      height={1920}
+      fps={30}
+      durationInFrames={30}
+      defaultProps={whatIfDefaults}
       calculateMetadata={({props}) => ({durationInFrames: props.durationInFrames, fps: props.fps, width: props.width, height: props.height})}
     />
     <Composition

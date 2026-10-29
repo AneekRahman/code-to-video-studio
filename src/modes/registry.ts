@@ -5,9 +5,10 @@ import {StudioError} from '../errors.ts';
 import {packageRoot} from '../render.ts';
 import {explainerMode} from './explainer/mode.ts';
 import {isometricZombieMode} from './isometric-art-zombie-apocalypse/mode.ts';
+import {lowPolyWhatIfMode} from './low-poly-3d-what-if/mode.ts';
 import {ModeCardSchema, ModeIdSchema, modeApiVersion, reservedModeIdPrefix, type LoadedJobBase, type StudioMode} from './mode.ts';
 
-export const shippedModes: readonly StudioMode[] = [explainerMode, isometricZombieMode];
+export const shippedModes: readonly StudioMode[] = [explainerMode, isometricZombieMode, lowPolyWhatIfMode];
 export const fallbackModeId = explainerMode.card.id;
 export const localModesDirectory = resolve(packageRoot, 'local-modes');
 
