@@ -8,12 +8,13 @@ below.
 
 Method:
 
+0. **A reference video?** If the person supplied or wants to use a reference video, do [reference-to-mode](reference-to-mode.md) first: measure it, read it by timestamp, and bring its analysis and observations into the request. The steps below still apply.
 1. **Interview.** Ask, in as few question cards as possible (up to six
    questions each), what the series is about, what stays the same in every
    video, what changes per video, the duration range, the look and any
    references, the voice and sound, and anything to avoid. Propose a mode id
    (lowercase words joined by hyphens) and title, and let them correct it.
-2. **Record the request.** Write the answers as a `mode_request` document
+2. **Record the request.** Write the answers (with `reference_analyses` and `observations` for a reference) as a `mode_request` document
    (`studio schemas`) in `work/mode-requests/`, then run
    `pnpm studio check-mode-request --request <file>`. It rejects ids that
    already exist (`MODE_EXISTS`) and returns the plan path and the mode's

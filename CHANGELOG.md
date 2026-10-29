@@ -6,6 +6,14 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## v1.3.0
+
+Mode API 1.0.
+
+- Reference videos. `studio analyze-reference --video --out` measures a reference: cut times (adaptive threshold, about 0.1 s), scenes, palette and its proportions, per-scene palette, activity, loudness, silences, and writes tile sheets of numbered frames; it reports what it cannot measure (typography, layout, motion paths, transitions, words, graphics). `studio compare-reference --analysis --video --out` measures a sample against it: palette distance (CIE76), cut rate, median scene length, activity level and burstiness, loudness, as a `measured_fidelity` with each check.
+- A mode request can carry `reference_analyses` and timestamped `observations`; `check-mode-request` refuses one that has not read its reference closely (`REFERENCE_UNDER_OBSERVED`: a scene with no observation or an unobserved required system; `REFERENCE_CHANGED`; `OBSERVATION_OUT_OF_RANGE`; `REFERENCE_UNMEASURED`).
+- `skills/reference-to-mode.md`: measure, read by timestamp, name tokens, build in stages with a comparison after each, critique by fixed passes (adapted from taste-skill, MIT; Hypit's reading approach, ideas only).
+
 ## v1.2.0
 
 Mode API 1.0.
