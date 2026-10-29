@@ -4,7 +4,7 @@ Trigger: Author or modify the explainer.
 
 Inputs: Approved scene plan, validated job and pinned assets.
 
-Method: Search catalog; compose existing components; keep frame calculations pure; render scene previews; preserve exclusive frame ends.
+Method: Read [explainer-motion](explainer-motion.md) for treatments and looks; search catalog; compose existing components; keep frame calculations pure; render scene previews; preserve exclusive frame ends.
 
 Permitted tools: Local TypeScript checks, studio preview/render, artifact inspection. This instruction grants no tools, credentials or access.
 

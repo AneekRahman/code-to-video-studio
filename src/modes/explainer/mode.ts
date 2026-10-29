@@ -12,7 +12,7 @@ export const explainerMode = defineMode<LoadedExplainerJob>({
     id: 'explainer',
     title: 'Narrated explainer',
     role: 'fallback',
-    summary: 'A narrated 9:16 short built from code-animated text, charts, mockups and still images, timed to finalized narration and word timestamps.',
+    summary: 'A narrated 9:16 short built from spring-animated titles, lists, quotes, process steps, charts (including an isometric 3D bar field), typed code, counters and gauges, over moving stills, in a dark studio or cream paper look, with scene transitions and word-synced captions, timed to finalized narration and word timestamps.',
     use_when: [
       'educational lists, tips, myths versus facts and how-tos',
       'comparisons, statistics, charts, timelines and processes',
@@ -26,7 +26,7 @@ export const explainerMode = defineMode<LoadedExplainerJob>({
     aspect: '9:16',
     duration_seconds: null,
     inputs: ['script', 'storyboard', 'finalized narration audio', 'word-level timestamps', 'brand', 'permitted stills and fonts', 'optional mix tracks'],
-    skill: 'skills/remotion-scene-authoring.md',
+    skill: 'skills/explainer-motion.md',
     templates: ['scripts/create-fixture.ts'],
     commands: ['validate', 'compile', 'preview', 'render', 'finish', 'run', 'verify', 'narrate-explainer'],
   },

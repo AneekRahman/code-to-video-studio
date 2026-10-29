@@ -2,49 +2,20 @@ import {useEffect, useState} from 'react';
 import {AbsoluteFill, Composition, Sequence, cancelRender, continueRender, delayRender, registerRoot, staticFile, useCurrentFrame} from 'remotion';
 import type {RenderProps, CompiledScene, Brand} from '../contracts.ts';
 import {getCaptionClearance} from '../captions.ts';
-import {
-  CaptionTrack,
-  ChecklistCard,
-  ComparisonCard,
-  HookHeadline,
-  ImagePanel,
-  NarrativeCard,
-  ProgressBar,
-  SafeArea,
-  SceneNumber,
-  StatCounter,
-  StatSteps,
-} from './components.tsx';
+import {ProgressBar, SafeArea} from './components.tsx';
+import {Backdrop, FilmGrain} from './motion/Backdrop.tsx';
+import {MotionCaptions} from './motion/Captions.tsx';
+import {SceneClock, SettledClock} from './motion/clock.tsx';
+import {SceneBackground, SceneLayout} from './motion/Scene.tsx';
+import {paletteFor} from './motion/theme.ts';
+import {SceneShell, TransitionLayer, transitionInto} from './motion/Transitions.tsx';
 import {IsoHorror} from '../modes/isometric-art-zombie-apocalypse/rendering/scene.tsx';
 import type {IsoProps} from '../modes/isometric-art-zombie-apocalypse/shots.ts';
 import {IsoStory} from '../modes/isometric-art-zombie-apocalypse/rendering/story-scene.tsx';
 import type {StoryProps} from '../modes/isometric-art-zombie-apocalypse/story.ts';
 import {overflowsItsBox} from './layout-overflow.ts';
 
-export function SceneContent({scene, stills, accent}: {scene: CompiledScene; stills: Record<string, string>; accent: string}) {
-  const hasStill = scene.still_asset_id && stills[scene.still_asset_id];
-  return (
-    <>
-      <HookHeadline text={scene.title} accent={accent}/>
-      {hasStill ? <ImagePanel src={stills[scene.still_asset_id!]!}/> : null}
-      {scene.treatment === 'stat' ? (
-        <>
-          <StatCounter value={scene.value ?? 0} suffix={scene.suffix ?? ''} accent={accent}/>
-          {scene.lines.length > 0 ? <StatSteps lines={scene.lines} accent={accent}/> : null}
-        </>
-      ) : null}
-      {scene.treatment === 'checklist' ? (
-        <ChecklistCard lines={scene.lines} accent={accent}/>
-      ) : null}
-      {scene.treatment === 'comparison' ? (
-        <ComparisonCard lines={scene.lines} accent={accent}/>
-      ) : null}
-      {scene.treatment === 'headline' ? (
-        <NarrativeCard lines={scene.lines} accent={accent}/>
-      ) : null}
-    </>
-  );
-}
+const FIRST_SCENE_LEAD = 10;
 
 export function validateSceneLayout(
   scene: CompiledScene,
@@ -112,16 +83,24 @@ export function validateSceneLayout(
   return null;
 }
 
-function Explainer({timeline, brand, stills, font}: RenderProps) {
+function loadFace(family: string, file: string) {
+  return new FontFace(family, `url("${staticFile(file)}")`, {weight: '100 900'}).load();
+}
+
+function Explainer({timeline, brand, stills, font, fonts}: RenderProps) {
   const frame = useCurrentFrame();
   const [fontHandle] = useState(() => delayRender('Load pinned brand font and validate layout'));
+  const palette = paletteFor(brand);
+  const intensity = brand.motion ?? 'dynamic';
+  const total = timeline.scenes.length;
+  const current = Math.max(0, timeline.scenes.findIndex(scene => frame >= scene.startFrame && frame < scene.endFrame));
 
   useEffect(() => {
     let isCancelled = false;
-    const face = new FontFace('StudioBrand', `url("${staticFile(font)}")`);
-    face.load().then(async loaded => {
+    const faces = [loadFace('StudioBrand', font), ...(fonts ? [loadFace('StudioDisplay', fonts.display), loadFace('StudioMono', fonts.mono)] : [])];
+    Promise.all(faces).then(async loaded => {
       if (isCancelled) return;
-      document.fonts.add(loaded);
+      for (const face of loaded) document.fonts.add(face);
       await document.fonts.ready;
 
       for (const scene of timeline.scenes) {
@@ -140,27 +119,38 @@ function Explainer({timeline, brand, stills, font}: RenderProps) {
     return () => {
       isCancelled = true;
     };
-  }, [font, fontHandle, brand, stills, timeline]);
+  }, [font, fonts, fontHandle, brand, stills, timeline]);
 
   return (
-    <AbsoluteFill style={{background: brand.background, color: brand.foreground, fontFamily: 'StudioBrand', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', width: 1000, height: 1000, left: 480, top: -500, borderRadius: 500, border: `90px solid ${brand.accent}`, opacity: 0.06}}/>
-      {timeline.scenes.map((scene, index) => (
-        <Sequence key={scene.scene_id} from={scene.startFrame} durationInFrames={scene.endFrame - scene.startFrame}>
-          <SafeArea brand={brand}>
-            <SceneNumber index={index} total={timeline.scenes.length} accent={brand.accent}/>
-            <SceneContent scene={scene} stills={stills} accent={brand.accent}/>
-          </SafeArea>
-        </Sequence>
-      ))}
-      <CaptionTrack
+    <AbsoluteFill style={{color: palette.foreground, fontFamily: 'StudioBrand', overflow: 'hidden'}}>
+      <Backdrop palette={palette} intensity={intensity} width={timeline.width} height={timeline.height} sceneIndex={current}/>
+      {timeline.scenes.map((scene, index) => {
+        const frames = scene.endFrame - scene.startFrame;
+        return (
+          <Sequence key={scene.scene_id} from={scene.startFrame} durationInFrames={frames}>
+            <SceneShell enter={transitionInto(timeline.scenes, index)} exit={index + 1 < total ? transitionInto(timeline.scenes, index + 1) : 'cut'} frames={frames}>
+              <SceneClock scene={scene} words={timeline.words} intensity={intensity} lead={index === 0 ? FIRST_SCENE_LEAD : 0}>
+                <SceneBackground scene={scene} stills={stills} palette={palette}/>
+                <SafeArea brand={brand}>
+                  <SceneLayout scene={scene} index={index} total={total} stills={stills} palette={palette}/>
+                </SafeArea>
+              </SceneClock>
+            </SceneShell>
+          </Sequence>
+        );
+      })}
+      <TransitionLayer scenes={timeline.scenes} palette={palette} width={timeline.width} height={timeline.height}/>
+      <MotionCaptions
         words={timeline.words.filter(word =>
           timeline.scenes.some(scene => frame >= scene.startFrame && frame < scene.endFrame && scene.narration_segment_ids.includes(word.segment_id))
         )}
         frame={frame}
         brand={brand}
+        palette={palette}
+        emphasis={timeline.scenes[current]?.emphasis ?? []}
       />
-      <ProgressBar progress={frame / Math.max(1, timeline.durationInFrames - 1)} accent={brand.accent}/>
+      {palette.look === 'paper' ? null : <FilmGrain width={timeline.width} height={timeline.height}/>}
+      {palette.look === 'paper' ? null : <ProgressBar progress={frame / Math.max(1, timeline.durationInFrames - 1)} accent={brand.accent}/>}
 
       <div
         style={{
@@ -173,7 +163,7 @@ function Explainer({timeline, brand, stills, font}: RenderProps) {
           pointerEvents: 'none',
         }}
       >
-        {timeline.scenes.map(scene => (
+        {timeline.scenes.map((scene, index) => (
           <div
             key={scene.scene_id}
             id={`measure-scene-${scene.scene_id}`}
@@ -188,8 +178,9 @@ function Explainer({timeline, brand, stills, font}: RenderProps) {
               boxSizing: 'border-box',
             }}
           >
-            <SceneNumber index={0} total={timeline.scenes.length} accent={brand.accent}/>
-            <SceneContent scene={scene} stills={stills} accent={brand.accent}/>
+            <SettledClock scene={scene} words={timeline.words} intensity={intensity}>
+              <SceneLayout scene={scene} index={index} total={total} stills={stills} palette={palette}/>
+            </SettledClock>
           </div>
         ))}
       </div>

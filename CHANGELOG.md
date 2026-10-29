@@ -6,6 +6,18 @@ raises the mode API major lists, under **Migrating local modes**, every change
 a local mode needs; `pnpm studio update` will not move a workspace onto it
 until each local mode has been migrated and passes `pnpm test:modes`.
 
+## v1.2.0
+
+Mode API 1.0.
+
+- The explainer is rebuilt on a motion system. Scenes enter on springs, list items land on the spoken word they belong to (word-anchored cues), scenes change through wipe, iris, push and zoom transitions that never break the shared scene boundary, and stills move (Ken-Burns, full-bleed or panel). Captions are word-synced with an accent box on the spoken or emphasised word.
+- Two looks: `studio` (dark, drifting light, grain) and `paper` (cream sheet, ink borders, offset shadows, marker highlights, numbered chapter chips), chosen by the optional `brand.look`; `brand.motion` sets `calm`, `dynamic` or `punchy`.
+- New treatments: `quote`, `steps`, `chart` (`bars`, or `iso` for a three.js clay bar field), `code` (typed, syntax-coloured), `grid` (counter chips), `gauge` and `orbit` (an extruded starburst with icon blocks orbiting it, three.js). The four existing treatments are rebuilt. New optional scene fields: `kicker`, `data`, `unit`, `chart_style`, `code`, `emphasis`, `transition`, `still_layout`, `still_motion`; `*word*` accents a title word. `lines` now defaults to empty. Every v1.1 job still validates and renders, with the new look.
+- The layout check measures the settled layout of each scene, not frame 0, so entrance motion cannot hide or cause an overflow.
+- Fonts: bundled Inter 800 (titles) and JetBrains Mono (code) are staged with every explainer render; the job's font stays the body font. Only `chart_style: iso` and `orbit` use WebGL (three.js: lit bevelled clay, soft shadows, a frame-driven camera); everything else is CSS and SVG. On GPU-less Linux hosts WebGL runs on the CPU (`swangle`), so those two scenes render slower there; the layout check never creates a WebGL context.
+- `narrate-explainer` normalises the word timings a speech aligner returns (every word at least 0.04 s, none overlapping), so real ElevenLabs narration compiles.
+- `scripts/create-showcase.ts` builds a job that uses every treatment in either look (with `--art` and `--narration` for generated pictures and real speech, whooshes timed to the transitions); `scripts/generate-showcase-art.ts` and `scripts/narrate-showcase.ts` make those inputs; the catalog is 0.2.0 and the mode API exports the new components.
+
 ## v1.1.3
 
 Mode API 1.0.

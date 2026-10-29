@@ -29,6 +29,19 @@ export function compileTimeline(job: Job, scenes: Scene[], timing: Timing, segme
     requireCondition(startFrame === boundary && endFrame > startFrame && endFrame <= duration, 'TIMING_CONFLICT', 'Scene has a gap, overlap, zero-frame range or exceeds duration');
     requireCondition(scene.narration_segment_ids.every(id => segmentIds.has(id)), 'MISSING_SEGMENT', 'Scene references an unknown script segment');
     requireCondition(scene.treatment !== 'stat' || scene.value !== undefined, 'INVALID_SCENE', 'Stat scenes require a numeric value');
+    requireCondition(scene.treatment !== 'chart' || scene.data !== undefined, 'INVALID_SCENE', 'Chart scenes require data with 2 to 6 items');
+    requireCondition(scene.treatment !== 'grid' || (scene.value !== undefined && Number.isInteger(scene.value) && scene.value >= 1 && scene.value <= 24), 'INVALID_SCENE', 'Grid scenes require an integer value from 1 to 24');
+    requireCondition(scene.treatment !== 'orbit' || (scene.value !== undefined && Number.isInteger(scene.value) && scene.value >= 3 && scene.value <= 12), 'INVALID_SCENE', 'Orbit scenes require an integer value from 3 to 12');
+    requireCondition(scene.treatment !== 'gauge' || (scene.value !== undefined && scene.value >= 0 && scene.value <= 100), 'INVALID_SCENE', 'Gauge scenes require a value from 0 to 100');
+    requireCondition(scene.chart_style !== 'iso' || (scene.data !== undefined && scene.data.length <= 6), 'INVALID_SCENE', 'Isometric charts need data with at most 6 items');
+    requireCondition(scene.treatment !== 'code' || scene.code !== undefined, 'INVALID_SCENE', 'Code scenes require a code block');
+    requireCondition(!['quote', 'steps'].includes(scene.treatment) || scene.lines.length > 0, 'INVALID_SCENE', 'Quote and steps scenes require at least one line');
+    requireCondition(scene.treatment !== 'steps' || scene.lines.length >= 2, 'INVALID_SCENE', 'Steps scenes require at least two lines');
+    if (scene.code) {
+      const rows = scene.code.text.split('\n');
+      requireCondition(rows.length <= 10 && rows.every(row => row.length <= 38), 'INVALID_SCENE', 'Code blocks hold at most 10 lines of 38 characters');
+      requireCondition((scene.code.highlight ?? []).every(line => line <= rows.length), 'INVALID_SCENE', 'Highlighted code line is outside the block');
+    }
     boundary = endFrame; rawBoundary = scene.end_seconds;
     return {...scene, startFrame, endFrame};
   });

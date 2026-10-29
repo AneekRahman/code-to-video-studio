@@ -42,6 +42,10 @@ export async function renderVisual(loaded: LoadedJob, dir: string, kind: 'previe
     if (asset.asset_id === loaded.brand.font_asset_id) font = name;
   }
 
+  const fonts = {display: 'studio-display.woff2', mono: 'studio-mono.woff2'};
+  await cp(fileURLToPath(import.meta.resolve('@fontsource/inter/files/inter-latin-800-normal.woff2')), resolve(publicDir, fonts.display));
+  await cp(fileURLToPath(import.meta.resolve('@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2')), resolve(publicDir, fonts.mono));
+
   const serveUrl = await bundle({
     entryPoint: resolve(packageRoot, 'src/rendering/entry.tsx'),
     rootDir: packageRoot,
@@ -73,7 +77,7 @@ export async function renderVisual(loaded: LoadedJob, dir: string, kind: 'previe
   process.once('SIGTERM', handleSigTerm);
 
   try {
-    const inputProps = {timeline: loaded.timeline, brand: loaded.brand, font, stills};
+    const inputProps = {timeline: loaded.timeline, brand: loaded.brand, font, fonts, stills};
     const stepTimeout = Math.max(1_000, deadline - Date.now());
     const composition = await selectComposition({
       serveUrl,

@@ -6,6 +6,7 @@ import {runTool} from '../../process.ts';
 import type {AudioProvider} from '../../audiogen/provider.ts';
 import {alignmentWords} from '../isometric-art-zombie-apocalypse/sound.ts';
 import {mediaDuration} from '../../audio.ts';
+import {normalizeWordTimings} from './timing.ts';
 
 export type NarrateExplainerOptions = {
   script: string | Script;
@@ -103,7 +104,7 @@ export async function narrateExplainer(options: NarrateExplainerOptions): Promis
     schema_version: '1.0',
     audio_sha256: audioSha256,
     duration_seconds: finalDuration,
-    words: allWords,
+    words: normalizeWordTimings(allWords, finalDuration),
   });
 
   const timestampsFile = resolve(outDir, 'timestamps.json');

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "library_version": "0.1.0",
+  "library_version": "0.2.0",
   "status": "local-fixture-implementation",
   "aspect_ratios": [
     "9:16"
@@ -338,6 +338,366 @@
       "accessibility": "captions for every spoken line; mobile contrast reviewed on contact sheets",
       "fonts": "none",
       "duration": "per shot"
+    },
+    {
+      "name": "Backdrop",
+      "version": "0.2.0",
+      "purpose": "Drifting accent light, parallax dot grid and vignette (studio look) or paper with a dot grid (paper look)",
+      "inputs": {
+        "palette": "paletteFor(brand)",
+        "intensity": "calm | dynamic | punchy"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "FilmGrain",
+      "version": "0.2.0",
+      "purpose": "Deterministic film grain, a function of the frame",
+      "inputs": {},
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "SceneClock",
+      "version": "0.2.0",
+      "purpose": "Gives a scene's components its local frame and spoken-word frames; SettledClock gives the end state for layout measurement",
+      "inputs": {
+        "scene": "compiled scene",
+        "words": "timeline words"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "SplitTitle",
+      "version": "0.2.0",
+      "purpose": "Word-by-word spring title with *accent* markup",
+      "inputs": {
+        "text": "<=100 characters, *word* marks the accent"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "Kicker",
+      "version": "0.2.0",
+      "purpose": "Chapter rail (progress segments or numbered chips) and an optional /tag chip",
+      "inputs": {
+        "text": "<=32 characters"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "StillPanel",
+      "version": "0.2.0",
+      "purpose": "Pinned raster in a framed panel with a reveal and Ken-Burns motion",
+      "inputs": {
+        "src": "staged raster",
+        "motion": "push-in | pull-out | pan-left | pan-right"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "StillBackground",
+      "version": "0.2.0",
+      "purpose": "Full-bleed still with scrim behind the scene text",
+      "inputs": {
+        "src": "staged raster"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "TransitionLayer",
+      "version": "0.2.0",
+      "purpose": "Shutter cover straddling each scene boundary: wipe, iris; push and zoom through SceneShell",
+      "inputs": {
+        "scenes": "compiled scenes"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "MotionCaptions",
+      "version": "0.2.0",
+      "purpose": "Word-synced captions with an accent box on the spoken or emphasised word",
+      "inputs": {
+        "emphasis": "words to mark"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "CheckRows",
+      "version": "0.2.0",
+      "purpose": "Checklist rows that tick as the narrator reaches each",
+      "inputs": {
+        "lines": "<=4"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "VersusRows",
+      "version": "0.2.0",
+      "purpose": "Two-card comparison with a VS badge, or stacked rows for 3-4 lines",
+      "inputs": {
+        "lines": "2-4"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "PointRows",
+      "version": "0.2.0",
+      "purpose": "Headline points with a drawn marker bar",
+      "inputs": {
+        "lines": "<=4"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "StatBlock",
+      "version": "0.2.0",
+      "purpose": "Count-up number with progress line and chips",
+      "inputs": {
+        "value": "number",
+        "suffix": "<=12 characters"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "QuoteBlock",
+      "version": "0.2.0",
+      "purpose": "Pull quote revealed word by word; second line is the attribution",
+      "inputs": {
+        "lines": "1-2"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "StepsRail",
+      "version": "0.2.0",
+      "purpose": "Numbered process with a connector that draws between steps",
+      "inputs": {
+        "lines": "2-4"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "BarChart",
+      "version": "0.2.0",
+      "purpose": "Horizontal bars that grow and count up, leader highlighted",
+      "inputs": {
+        "data": "2-6 items"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "CodeWindow",
+      "version": "0.2.0",
+      "purpose": "Typed, syntax-coloured code window with highlighted lines",
+      "inputs": {
+        "code": "<=10 lines of <=38 characters"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "BarField",
+      "version": "0.2.0",
+      "purpose": "Ranked bars on a clay field in three.js: lit, bevelled, soft shadows, turning camera; ranked bars light up with rank pills",
+      "inputs": {
+        "data": "2-6 items"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "WebGL: ANGLE on macOS, swangle (CPU) elsewhere; the layout check creates no context",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "ChipGrid",
+      "version": "0.2.0",
+      "purpose": "Chips that light one by one with a running counter sticker",
+      "inputs": {
+        "value": "1-24"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "Gauge",
+      "version": "0.2.0",
+      "purpose": "Half-circle dial that sweeps and counts to 0-100 with a verdict pill",
+      "inputs": {
+        "value": "0-100"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "CSS and SVG only, no WebGL; one worker at concurrency 1",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
+    },
+    {
+      "name": "OrbitHero",
+      "version": "0.2.0",
+      "purpose": "Extruded clay starburst with icon blocks orbiting a shadow disc, each arriving on its spoken word; counter sticker",
+      "inputs": {
+        "value": "3-12 blocks",
+        "suffix": "<=12 characters"
+      },
+      "external_network": false,
+      "deprecation_status": "active",
+      "validation": "tests/motion.node-test.ts and the showcase render (scripts/create-showcase.ts)",
+      "preview": "pnpm studio preview on a showcase job; generated per job",
+      "safe_area": "configured in BrandSchema; checked by the layout check against the settled layout",
+      "fonts": "pinned brand font as StudioBrand, bundled Inter 800 as StudioDisplay, bundled JetBrains Mono as StudioMono",
+      "performance": "WebGL: ANGLE on macOS, swangle (CPU) elsewhere; the layout check creates no context",
+      "accessibility": "mobile readability and contrast require review",
+      "duration": "scene timeline; word-anchored cues need at least 20 frames per item"
     }
   ]
 }
