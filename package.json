@@ -16,7 +16,8 @@
     "fixture": "node --experimental-strip-types scripts/create-fixture.ts",
     "catalog:modes": "node --experimental-strip-types scripts/write-mode-catalog.ts",
     "test:modes": "node --experimental-strip-types --use-env-proxy scripts/test-modes.ts",
-    "check:release": "node --experimental-strip-types scripts/check-release.ts"
+    "check:release": "node --experimental-strip-types scripts/check-release.ts",
+    "test:golden": "node --experimental-strip-types --use-env-proxy scripts/golden-frames.ts"
   },
   "dependencies": {
     "@fontsource/bebas-neue": "5.3.0",

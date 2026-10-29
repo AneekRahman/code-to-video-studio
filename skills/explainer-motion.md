@@ -4,6 +4,12 @@ Trigger: Plan or write the storyboard of a narrated explainer, or choose its loo
 
 Inputs: Approved script, word timestamps, brand, permitted stills.
 
+## Start from the starter, then lint
+
+1. `pnpm studio doctor`: note `webgl_budget` (it caps iso charts, orbit and logos; export it as `STUDIO_WEBGL_BUDGET` if it is below 3).
+2. `pnpm studio storyboard-template --look paper --scenes 8` (or `studio`): copy its `brand` unchanged and rewrite its `storyboard` scene by scene. Do not invent colours.
+3. After narration, set times from the timestamps, then `pnpm studio lint-storyboard --storyboard ... --brand ... --timestamps ...` and fix every problem before building the job.
+
 ## Pick the look
 
 `brand.look` is `studio` (dark, glass cards, drifting light, grain; the default) or `paper` (cream sheet, ink borders, offset shadows, orange marker highlights, numbered chapter chips). Paper wants a light `background`, a near-black `foreground` and one warm `accent`; studio wants a dark background. `brand.motion` is `calm`, `dynamic` (default) or `punchy`.

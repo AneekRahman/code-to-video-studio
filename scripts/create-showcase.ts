@@ -30,7 +30,7 @@ export const showcaseScenes = [
   {id: 'quote', segment: 'Make the boring parts automatic, and the creative part obvious.', treatment: 'quote', title: 'Why it *works*', lines: ['Make the boring parts automatic and the creative part obvious.', 'The studio'], emphasis: ['automatic', 'obvious']},
 ] as const;
 
-export type ShowcaseOptions = {look?: Look; only?: string[]; narration?: string};
+export type ShowcaseOptions = {look?: Look; only?: string[]; narration?: string; synthetic?: boolean};
 
 const cleanWord = (word: string) => word.replace(/[.,]/g, '');
 
@@ -67,8 +67,12 @@ export async function createShowcase(root: string | undefined, options: Showcase
       for (const text of segment.text.split(' ')) {
         const aiff = resolve(dir, `w${index}.aiff`);
         const chunk = resolve(dir, `w${index}.wav`);
-        await runTool('say', ['-o', aiff, text]);
-        await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', '-i', aiff, '-af', 'silenceremove=stop_periods=1:stop_duration=0.05:stop_threshold=-40dB,apad=pad_dur=0.06', '-ar', '48000', '-ac', '1', chunk]);
+        if (options.synthetic) {
+          await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', '-f', 'lavfi', '-i', `sine=frequency=${300 + (index % 7) * 40}:sample_rate=48000:duration=0.3`, '-ac', '1', chunk]);
+        } else {
+          await runTool('say', ['-o', aiff, text]);
+          await runTool('ffmpeg', ['-v', 'error', '-nostdin', '-n', '-i', aiff, '-af', 'silenceremove=stop_periods=1:stop_duration=0.05:stop_threshold=-40dB,apad=pad_dur=0.06', '-ar', '48000', '-ac', '1', chunk]);
+        }
         const length = (await probe(chunk)).duration;
         timings.push({segment_id: `n${sceneIndex + 1}`, text, start: cursor, end: cursor + length});
         cursor += length;
@@ -105,9 +109,9 @@ export async function createShowcase(root: string | undefined, options: Showcase
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const {values} = parseArgs({options: {out: {type: 'string'}, look: {type: 'string', default: 'studio'}, only: {type: 'string'}, narration: {type: 'string'}}});
+  const {values} = parseArgs({options: {out: {type: 'string'}, look: {type: 'string', default: 'studio'}, only: {type: 'string'}, narration: {type: 'string'}, synthetic: {type: 'boolean', default: false}}});
   const look = values.look === 'paper' ? 'paper' : 'studio';
-  createShowcase(values.out, {look, only: values.only?.split(','), narration: values.narration}).then(result => process.stdout.write(`${JSON.stringify(result)}\n`)).catch((err: unknown) => {
+  createShowcase(values.out, {look, only: values.only?.split(','), narration: values.narration, synthetic: values.synthetic}).then(result => process.stdout.write(`${JSON.stringify(result)}\n`)).catch((err: unknown) => {
     process.stderr.write(`Showcase creation failed${err instanceof Error ? `: ${err.message}` : ''}; ffmpeg and macOS say are required.\n`);
     process.exitCode = 1;
   });

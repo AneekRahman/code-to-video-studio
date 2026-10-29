@@ -24,6 +24,7 @@ import {migrateAllModes, migrateMode} from './migrations/runner.ts';
 import {updateStudio} from './update.ts';
 import {doctor} from './doctor.ts';
 import {ensureBrowser} from '@remotion/renderer';
+import {lintFiles, starterBundle} from './storyboard-template.ts';
 import {checkModeRequest} from './modes/request.ts';
 import {pruneScratch} from './prune.ts';
 import {narrateExplainer} from './modes/explainer/narrate.ts';
@@ -55,7 +56,7 @@ function sanitizeDetails(details: unknown): unknown {
 }
 
 async function main() {
-  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, script: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}, voice: {type: 'string'}, seed: {type: 'string'}, fresh: {type: 'boolean'}, force: {type: 'boolean'}, all: {type: 'boolean'}}});
+  const {positionals, values} = parseArgs({allowPositionals: true, options: {job: {type: 'string'}, out: {type: 'string'}, 'visual-manifest': {type: 'string'}, result: {type: 'string'}, plates: {type: 'string'}, shots: {type: 'string'}, story: {type: 'string'}, script: {type: 'string'}, timing: {type: 'string'}, 'stills-only': {type: 'boolean'}, provider: {type: 'string'}, only: {type: 'string'}, sound: {type: 'string'}, audio: {type: 'string'}, 'job-id': {type: 'string'}, request: {type: 'string'}, to: {type: 'string'}, remote: {type: 'string'}, mode: {type: 'string'}, 'dry-run': {type: 'boolean'}, 'no-migrate': {type: 'boolean'}, 'older-than': {type: 'string'}, voice: {type: 'string'}, seed: {type: 'string'}, storyboard: {type: 'string'}, brand: {type: 'string'}, timestamps: {type: 'string'}, look: {type: 'string'}, scenes: {type: 'string'}, fresh: {type: 'boolean'}, force: {type: 'boolean'}, all: {type: 'boolean'}}});
   const command = positionals[0];
   if (command === 'unlock') return unlockJob(resolve(values.out ?? resolve(packageRoot, 'work/outputs'), '.studio-lock'), values.force);
   if (command === 'clean') return cleanStudioWork({jobId: values.job, all: values.all});
@@ -134,6 +135,14 @@ async function main() {
   if (command === 'catalog') return JSON.parse(await readFile(new URL('../catalog/components.json', import.meta.url), 'utf8'));
   if (command === 'prepare-browser') return {status: 'browser_ready', browser: (await ensureBrowser()).type};
   if (command === 'modes') return modeCatalog();
+  if (command === 'storyboard-template') {
+    requireCondition(values.look === 'paper' || values.look === 'studio', 'USAGE', 'storyboard-template requires --look paper|studio [--scenes <1-12>]');
+    return starterBundle(values.look, Number(values.scenes ?? 8));
+  }
+  if (command === 'lint-storyboard') {
+    requireCondition(values.storyboard && values.brand && values.timestamps, 'USAGE', 'lint-storyboard requires --storyboard <storyboard.json> --brand <brand.json> --timestamps <timestamps.json>');
+    return lintFiles(values.storyboard, values.brand, values.timestamps);
+  }
   if (command === 'check-mode-request') {
     requireCondition(values.request, 'USAGE', 'check-mode-request requires --request <mode-request.json>');
     return checkModeRequest(values.request);
@@ -142,7 +151,7 @@ async function main() {
     requireCondition(values.result, 'USAGE', 'verify requires --result <output directory>');
     return {status: 'verified', result: await verifyArtifacts(values.result)};
   }
-  requireCondition(values.job, 'USAGE', 'Commands: validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>] [--fresh]; unlock [--out <store under work/>] [--force]; clean [--job <id> | --all]; generate-plates; generate-audio; narrate-explainer; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; diagnostics; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; prune [--older-than <hours>] [--dry-run]; schemas; verify --result <directory>');
+  requireCondition(values.job, 'USAGE', 'Commands: storyboard-template --look paper|studio [--scenes n]; lint-storyboard --storyboard f --brand f --timestamps f; validate, compile, preview, render, finish, run --job <job.json> [--out <store under work/>] [--fresh]; unlock [--out <store under work/>] [--force]; clean [--job <id> | --all]; generate-plates; generate-audio; narrate-explainer; package-story; preview-shots; preview-story; catalog; modes; check-mode-request --request <file>; doctor; diagnostics; prepare-browser; update --to <tag>; migrate [--mode <id>] [--to <version>] [--dry-run]; prune [--older-than <hours>] [--dry-run]; schemas; verify --result <directory>');
   if (command === 'validate' || command === 'compile') {
     const loaded = await loadAnyJob(values.job);
     return {status: 'validated', job_id: loaded.job.job_id, mode: loaded.mode, adapter: loaded.job.adapter, input_hash: loaded.inputHash, timeline: command === 'compile' ? loaded.timeline : undefined, source: await sourceProvenance()};

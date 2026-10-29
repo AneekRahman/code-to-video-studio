@@ -9,6 +9,7 @@ import {packageRoot} from './render.ts';
 import {registry, type Registry} from './modes/registry.ts';
 import {pruneScratch} from './prune.ts';
 import {flockBinary} from './lock.ts';
+import {probeWebgl} from './webgl-probe.ts';
 
 export type DoctorCheck = {check_id: string; pass: boolean; required: boolean; detail: string};
 
@@ -99,6 +100,14 @@ async function workCheck(root: string): Promise<DoctorCheck> {
   }
 }
 
+async function webglCheck(root: string): Promise<{check: DoctorCheck; budget: number}> {
+  const result = await probeWebgl(root);
+  const detail = result.verdict === 'unavailable'
+    ? `WebGL benchmark unavailable (${result.renderer}); treat the WebGL budget as 0`
+    : `${result.renderer}: ${result.ms_per_frame} ms per benchmark frame, ${result.verdict}; WebGL scene budget ${result.webgl_budget} (iso chart, orbit, logos)`;
+  return {check: {check_id: 'webgl', pass: result.verdict !== 'unavailable', required: false, detail}, budget: result.webgl_budget};
+}
+
 async function scratchCheck(root: string): Promise<DoctorCheck> {
   const work = resolve(root, 'work');
   try {
@@ -148,6 +157,7 @@ export function capabilities(): string[] {
 
 export async function doctor(root = packageRoot, current: Registry = registry) {
   const canonical = await realpath(root);
+  const webgl = await webglCheck(canonical);
   const checks: DoctorCheck[] = [
     {check_id: 'node', pass: nodeSupported(process.versions.node), required: true, detail: `Node ${process.versions.node}; needs ${minimumNode.join('.')} or later`},
     proxyCheck(process.env, process.execArgv),
@@ -156,10 +166,11 @@ export async function doctor(root = packageRoot, current: Registry = registry) {
     await browserCheck(canonical),
     await workCheck(canonical),
     await scratchCheck(canonical),
+    webgl.check,
     ...await credentialChecks(canonical),
     ...modeChecks(current),
   ];
   await access(resolve(canonical, 'package.json'));
   const ready = checks.every(check => check.pass || !check.required);
-  return {status: ready ? 'ready' as const : 'not_ready' as const, bot_box: hostname() === boxHostname, studio: canonical, capabilities: capabilities(), checks};
+  return {status: ready ? 'ready' as const : 'not_ready' as const, bot_box: hostname() === boxHostname, studio: canonical, capabilities: capabilities(), webgl_budget: webgl.budget, checks};
 }

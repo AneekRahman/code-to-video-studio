@@ -115,6 +115,7 @@ pnpm studio compile --job work/my-job/job.json
 
 # 4. Render preview thumbnails and half-resolution clip
 pnpm studio preview --job work/my-job/job.json --out work/outputs
+# Explainer storyboards: pnpm studio storyboard-template --look paper|studio, then pnpm studio lint-storyboard --storyboard ... --brand ... --timestamps ...
 
 # 5. Full render and FFmpeg audio finishing
 pnpm studio run --job work/my-job/job.json --out work/outputs

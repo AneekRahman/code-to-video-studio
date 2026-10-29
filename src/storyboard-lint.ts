@@ -1,7 +1,13 @@
 import type {Brand, CompiledScene} from './contracts.ts';
 import {luminance} from './rendering/motion/theme.ts';
 
-export const WEBGL_SCENE_BUDGET = 3;
+export const DEFAULT_WEBGL_SCENE_BUDGET = 3;
+
+/** The host's WebGL allowance: `STUDIO_WEBGL_BUDGET` (set from the `doctor` verdict), else 3. */
+export function webglBudget(env: NodeJS.ProcessEnv = process.env): number {
+  const value = Number(env.STUDIO_WEBGL_BUDGET);
+  return Number.isInteger(value) && value >= 0 ? value : DEFAULT_WEBGL_SCENE_BUDGET;
+}
 export const MAX_REPEATED_TREATMENT = 2;
 
 const normalise = (word: string) => word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
@@ -27,7 +33,7 @@ export function lintStoryboard(scenes: CompiledScene[], brand: Brand, spokenWord
   if (look === 'studio' && luminance(brand.background) > 0.3) problems.push('the studio look needs a dark background (luminance 0.3 or less): its glass cards and light are tuned for dark');
   if (look === 'studio' && contrast(brand.accent, brand.background) < 3) problems.push('brand accent is too close to the background for the studio look (needs 3:1)');
   const heavy = scenes.filter(usesWebGL).length;
-  if (heavy > WEBGL_SCENE_BUDGET) problems.push(`${heavy} WebGL scenes (iso charts, orbit, logos); the budget is ${WEBGL_SCENE_BUDGET} so a GPU-less host can finish inside the job deadline`);
+  if (heavy > webglBudget()) problems.push(`${heavy} WebGL scenes (iso charts, orbit, logos); this host's budget is ${webglBudget()} so it can finish inside the job deadline`);
   let run = 1;
   for (let i = 1; i < scenes.length; i++) {
     run = scenes[i]!.treatment === scenes[i - 1]!.treatment ? run + 1 : 1;
