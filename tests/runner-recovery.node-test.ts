@@ -205,7 +205,7 @@ test('studio clean removes staging, corrupt outputs, and attempts only in the se
 
 test('doctor lists flock-lock only where a flock binary exists', async () => {
   const {capabilities} = await import('../src/doctor.ts');
-  await withFlock(async () => assert.deepEqual(capabilities(), ['unlock', 'clean', 'fresh', 'flock-lock']));
+  await withFlock(async () => assert.deepEqual(capabilities(), ['unlock', 'clean', 'fresh', 'reference-analysis', 'flock-lock']));
   const previous = process.env.STUDIO_FLOCK;
   process.env.STUDIO_FLOCK = '';
   try {

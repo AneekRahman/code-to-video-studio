@@ -152,7 +152,7 @@ export function modeChecks(current: Registry): DoctorCheck[] {
 
 /** Commands and guarantees this release offers; the host refuses to rely on ones a studio does not list. */
 export function capabilities(): string[] {
-  return ['unlock', 'clean', 'fresh', ...(flockBinary() ? ['flock-lock'] : [])];
+  return ['unlock', 'clean', 'fresh', 'reference-analysis', ...(flockBinary() ? ['flock-lock'] : [])];
 }
 
 export async function doctor(root = packageRoot, current: Registry = registry) {
